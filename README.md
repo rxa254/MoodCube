@@ -12,7 +12,7 @@
 1. Something acquires a sample each from many sensors
 1. These samples are passed to a Neural Network which does some nonlinear processing on the vector of input time series.
 1. The outputs of the NN are passed to a an output processor, which takes the outputs and writes them to the LEDs.
-![Block diagram](images/MoodCubeFlow.pdf)
+![Block diagram](images/MoodCubeFlow.png)
 
 ### LED Drive
 1. The NeoPixel or DotStar style of Arduino / Raspberry Pi compatible LEDs are a single strip of addressable RGB LEDs.
