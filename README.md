@@ -12,6 +12,7 @@
 1. Something acquires a sample each from many sensors
 1. These samples are passed to a Neural Network which does some nonlinear processing on the vector of input time series.
 1. The outputs of the NN are passed to a an output processor, which takes the outputs and writes them to the LEDs.
+![Block diagram](images/MoodCubeFlow.pdf)
 
 ### LED Drive
 1. The NeoPixel or DotStar style of Arduino / Raspberry Pi compatible LEDs are a single strip of addressable RGB LEDs.
@@ -22,6 +23,7 @@
     1. use a 3D printer to make some wild shapes to mount it on: trees, spheres, Japanese lantern, Klein bottle
     1. maybe hang them from a frame like Hanging Gardens or the living trees in Avatar
 1. needs ~60 mA per LED for full power. Should use a 5V, 10A AC/DC adapter and a power bus to spread power to each strip.
-
+------
+![zoom in on a NeoPixel](images/led_strips_single-neopixel.jpg)
 ------
 * GitHub Markdown: https://guides.github.com/features/mastering-markdown/
