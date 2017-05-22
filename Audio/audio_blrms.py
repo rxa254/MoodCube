@@ -7,8 +7,7 @@ Modified   May-2017, Rana X Adhikari
 from __future__ import division
 import time, sys, signal
 import argparse
-import threading
-import atexit
+#import threading
 import pyaudio
 import numpy as np
 from scipy.signal import welch
@@ -60,24 +59,24 @@ stream = p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
               frames_per_buffer = CHUNK)
 
 # define frequency bands for the BLRMS
-f1 = np.array([30, 100, 300, 1000, 3000])
-f1 = np.logspace(np.log10(30), np.log10(3000), 7)
+#f1 = np.array([30, 100, 300, 1000, 3000])
+f_min = 1/chunk_size
+f_max = RATE/2
+f1 = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
 #go for a few seconds
 i = 0
+blrms = np.zeros(len(f1)-1)
 while i < duration/chunk_size:
     data = np.fromstring(stream.read(CHUNK), dtype=np.int16)
     ff, psd  = welch(data, RATE, nperseg = CHUNK, scaling='spectrum')
 
-    blrms = []
-    
     for j in range(len(f1) - 1):
         inds = (ff > f1[j]) & (ff < f1[j+1])
-        v2 = np.sum(psd[inds])
-        blrms.append(v2)
-        
+        blrms[j] = np.sum(psd[inds])
     
-    print blrms
+    np.set_printoptions(formatter={'float': '{: 3.2f}'.format})
+    print(blrms)
     if __debug__:
         peak = np.average(np.abs(data))*2
         bars = "#"*int(50*peak/2**16)
