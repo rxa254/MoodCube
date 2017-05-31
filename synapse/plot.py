@@ -27,7 +27,7 @@ def plot():
     fig, ax = plt.subplots()
     lines = {}
     packet = recv_data()
-    for source, data in packet.__next__().items():
+    for source, data in next(packet).items():
         x = np.arange(len(data))
         lines[source] = ax.plot(x, data, label=source)
     ax.legend()
