@@ -32,8 +32,8 @@ def main():
         name='mux',
         target=mux.element,
         args=[args.sources],
-        daemon=True,
         )
+    proc.daemon = True
     logging.info(proc)
     procs['mux'] = proc
 
@@ -48,8 +48,8 @@ def main():
         proc = multiprocessing.Process(
             name=source_str,
             target=func,
-            daemon=True,
             )
+        proc.daemon = True
         logging.info(proc)
         procs[source_str] = proc
 
@@ -58,8 +58,8 @@ def main():
         proc = multiprocessing.Process(
             name='plot',
             target=plot.plot,
-            daemon=True,
             )
+        proc.daemon = True
         logging.info(proc)
         procs['plot'] = proc
 
