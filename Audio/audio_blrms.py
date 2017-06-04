@@ -1,197 +1,87 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Created on May 23 2014
-
-@author: florian
-https://github.com/flothesof/LiveFFTPitchTracker
 
 Modified   May-2017, Rana X Adhikari
 """
 from __future__ import division
-import sys
-import threading
-import atexit
+import time, sys, signal
+import argparse
+#import threading
 import pyaudio
 import numpy as np
-import matplotlib
-matplotlib.use("TkAgg")
-from matplotlib import figure
-from PyQt4 import QtGui, QtCore
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from scipy.signal import welch
 
-# class taken from the SciPy 2015 Vispy talk opening example
-# see https://github.com/vispy/vispy/pull/928
-class MicrophoneRecorder(object):
-    def __init__(self, rate=4096, chunksize=1024):
-        self.rate = rate
-        self.chunksize = chunksize
-        self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(format            = pyaudio.paInt16,
-                                  channels          = 1,
-                                  rate              = self.rate,
-                                  input             = True,
-                                  frames_per_buffer = self.chunksize,
-                                  stream_callback   = self.new_frame)
-        self.lock = threading.Lock()
-        self.stop = False
-        self.frames = []
-        atexit.register(self.close)
+parser = argparse.ArgumentParser(description='Acquire audio Data from Mic')
+parser.add_argument('-f','--fsample', dest='sample_frequency',
+                    metavar='fs', type=float,
+                    default = 44100, help='sample frequency [Hz]')
+parser.add_argument('-d','--duration', dest='duration',
+                        type=float,
+                        default = 1e6, help='recording duration [s]')
+parser.add_argument('-c','--chunk_size', dest='chunk_size',
+                        type=float,
+                        default = 0.1, help='chunk size [s]')
+args = parser.parse_args()
 
-    def new_frame(self, data, frame_count, time_info, status):
-        data = np.fromstring(data, 'int16')
-        with self.lock:
-            self.frames.append(data)
-            if self.stop:
-                return None, pyaudio.paComplete
-        return None, pyaudio.paContinue
+fs         = args.sample_frequency
+chunk_size = args.chunk_size
+duration   = args.duration
 
-    def get_frames(self):
-        with self.lock:
-            frames = self.frames
-            self.frames = []
-            return frames
-
-    def start(self):
-        self.stream.start_stream()
-
-    def close(self):
-        with self.lock:
-            self.stop = True
-        self.stream.close()
-        self.p.terminate()
+if __debug__:
+    print("Sample Frequency is " + str(fs) + " Hz")
+if fs < 1e-5:
+    parser.error("Error: sample rate must be > 1e-5 Hz")
 
 
-class MplFigure(object):
-    def __init__(self, parent):
-        self.figure  = figure.Figure(facecolor='white')
-        self.canvas  = FigureCanvas(self.figure)
-        self.toolbar = NavigationToolbar(self.canvas, parent)
 
-class LiveFFTWidget(QtGui.QWidget):
-    def __init__(self):
-        QtGui.QWidget.__init__(self)
+    
+def die_with_grace():
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+    
+# catch the CTRL-C
+def sigint_handler(signum, frame):
+    print('\n')
+    print('CTRL-C Encountered...Shutting down.\n')
+    die_with_grace()
+    sys.exit(0)
 
-        # customize the UI
-        self.initUI()
+signal.signal(signal.SIGINT, sigint_handler)
 
-        # init class data
-        self.initData()
+    
+RATE  = int(fs)
+CHUNK = int(np.floor(chunk_size * RATE))
 
-        # connect slots
-        self.connectSlots()
+p      = pyaudio.PyAudio()
+stream = p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
+              frames_per_buffer = CHUNK)
 
-        # init MPL widget
-        self.initMplWidget()
+# define frequency bands for the BLRMS
+#f1 = np.array([30, 100, 300, 1000, 3000])
+f_min = 1/chunk_size
+f_max = RATE/2
+f1 = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
-    def initUI(self):
+#go for a few seconds
+i = 0
+blrms = np.zeros(len(f1)-1)
+while i < duration/chunk_size:
+    data = np.fromstring(stream.read(CHUNK), dtype=np.int16)
+    ff, psd  = welch(data, RATE, nperseg = CHUNK, scaling='spectrum')
 
-        hbox_gain        = QtGui.QHBoxLayout()
-        autoGain         = QtGui.QLabel('Auto gain for frequency spectrum')
-        autoGainCheckBox = QtGui.QCheckBox(checked=True)
-        hbox_gain.addWidget(autoGain)
-        hbox_gain.addWidget(autoGainCheckBox)
+    for j in range(len(f1) - 1):
+        inds = (ff > f1[j]) & (ff < f1[j+1])
+        blrms[j] = np.sum(psd[inds])
+    
+    np.set_printoptions(formatter={'float': '{: 3.2f}'.format})
+    print(blrms)
+    if __debug__:
+        peak = np.average(np.abs(data))*2
+        bars = "#"*int(50*peak/2**16)
+        print("%04d %05d %s"%(i,peak,bars))
 
-        # reference to checkbox
-        self.autoGainCheckBox = autoGainCheckBox
+    i += 1
 
-        hbox_fixedGain  = QtGui.QHBoxLayout()
-        fixedGain       = QtGui.QLabel('Manual gain level for frequency spectrum')
-        fixedGainSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        hbox_fixedGain.addWidget(fixedGain)
-        hbox_fixedGain.addWidget(fixedGainSlider)
-
-        self.fixedGainSlider = fixedGainSlider
-
-        vbox = QtGui.QVBoxLayout()
-
-        vbox.addLayout(hbox_gain)
-        vbox.addLayout(hbox_fixedGain)
-
-        # mpl figure
-        self.main_figure = MplFigure(self)
-        vbox.addWidget(self.main_figure.toolbar)
-        vbox.addWidget(self.main_figure.canvas)
-
-        self.setLayout(vbox)
-
-        self.setGeometry(500, 500, 550, 700)
-        self.setWindowTitle('Microphone')
-        self.show()
-        # timer for calls, taken from:
-        # http://ralsina.me/weblog/posts/BB974.html
-        timer = QtCore.QTimer()
-        timer.timeout.connect(self.handleNewData)
-        timer.start(50)
-        # keep reference to timer
-        self.timer = timer
-
-
-    def initData(self):
-        mic = MicrophoneRecorder()
-        mic.start()
-
-        # keeps reference to mic
-        self.mic = mic
-
-        # computes the parameters that will be used during plotting
-        self.freq_vect = np.fft.rfftfreq(mic.chunksize,
-                                         1./mic.rate)
-        self.time_vect = np.arange(mic.chunksize, dtype=np.float32) / mic.rate * 1000
-
-    def connectSlots(self):
-        pass
-
-    def initMplWidget(self):
-        """creates initial matplotlib plots in the main window and keeps
-        references for further use"""
-        # top plot
-        self.ax_top = self.main_figure.figure.add_subplot(211)
-        self.ax_top.set_ylim(-32768, 32768)
-        self.ax_top.set_ylim(-10000, 10000)
-        self.ax_top.set_xlim(0, self.time_vect.max())
-        self.ax_top.set_xlabel(u'Time [ms]', fontsize=6)
-
-        # bottom plot
-        self.ax_bottom = self.main_figure.figure.add_subplot(212)
-        self.ax_bottom.set_ylim(0, 1)
-        self.ax_bottom.set_xlim(0, self.freq_vect.max())
-        self.ax_bottom.set_xlabel(u'Frequency [Hz]', fontsize = 6)
-        # line objects
-        self.line_top, = self.ax_top.plot(self.time_vect,
-                                         np.ones_like(self.time_vect))
-
-        self.line_bottom, = self.ax_bottom.plot(self.freq_vect,
-                                               np.ones_like(self.freq_vect))
-
-
-        # tight layout
-        #plt.tight_layout()
-
-    def handleNewData(self):
-        """ handles the asynchroneously collected sound chunks """
-        # gets the latest frames
-        frames = self.mic.get_frames()
-
-        if len(frames) > 0:
-            # keeps only the last frame
-            current_frame = frames[-1]
-            # plots the time signal
-            self.line_top.set_data(self.time_vect, current_frame)
-            # computes and plots the fft signal
-            fft_frame = np.fft.rfft(current_frame)
-            if self.autoGainCheckBox.checkState() == QtCore.Qt.Checked:
-                fft_frame /= np.abs(fft_frame).max()
-            else:
-                fft_frame *= (1 + self.fixedGainSlider.value()) / 5000000.
-                #print(np.abs(fft_frame).max())
-            self.line_bottom.set_data(self.freq_vect, np.abs(fft_frame))
-
-            # refreshes the plots
-            self.main_figure.canvas.draw()
-
-
-if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    window = LiveFFTWidget()
-    sys.exit(app.exec_())
+die_with_grace()
