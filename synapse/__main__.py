@@ -13,6 +13,7 @@ logging.basicConfig()
 from . import mux
 from . import sources
 from .sources import audio
+from .sources import audio_blrms
 from . import plot
 
 
