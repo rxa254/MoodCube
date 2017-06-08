@@ -20,32 +20,6 @@ import logging
 from .. import const
 
 
-parser = argparse.ArgumentParser(description='Acquire audio Data from Mic')
-parser.add_argument('-f','--fsample', dest='sample_frequency',
-                    metavar='fs', type=float,
-                    default = 44100, help='sample frequency [Hz]')
-parser.add_argument('-d','--duration', dest='duration',
-                        type=float,
-                        default = 1e6, help='recording duration [s]')
-parser.add_argument('-c','--chunk_size', dest='chunk_size',
-                        type=float,
-                        default = 0.1, help='chunk size [s]')
-parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                    action="store_true")
-args = parser.parse_args()
-if args.verbose:
-    logging.basicConfig(level=logging.DEBUG)
-
-fs         = args.sample_frequency
-chunk_size = args.chunk_size
-duration   = args.duration
-
-logging.debug("Sample Frequency is " + str(fs) + " Hz")
-
-if fs < 1e-5:
-    parser.error("Error: sample rate must be > 1e-5 Hz")
-
-
 # how to die gracefully so that no one notices
 def die_with_grace():
     stream.stop_stream()
@@ -60,18 +34,25 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 
-# ZMQ stuff
-context = zmq.Context()
-socket  = context.socket(zmq.PUB)
-socket.connect(const.MUX_SINK)
-logging.info(socket)
+DEFAULT_FS = 44100
+DEFAULT_CHUNK_SIZE = 0.1
+DEFAULT_DURATION = 1e6
 
+def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
+    logging.debug("Sample Frequency is " + str(fs) + " Hz")
 
+    if fs < 1e-5:
+        parser.error("Error: sample rate must be > 1e-5 Hz")
 
-RATE  = int(fs)
-CHUNK = int(np.floor(chunk_size * RATE))
+    RATE  = int(fs)
+    CHUNK = int(np.floor(chunk_size * RATE))
 
-def element():
+    context = zmq.Context()
+
+    socket  = context.socket(zmq.PUB)
+    socket.connect(const.MUX_SINK)
+    logging.info(socket)
+
     p      = pyaudio.PyAudio()
     stream = p.open(format = pyaudio.paInt16, channels = 1, rate = RATE, input = True,
               frames_per_buffer = CHUNK)
@@ -108,14 +89,36 @@ def element():
 
         i += 1
 
-    die_with_grace()
+    # die_with_grace()
 
 # ===============================================
 def main():
     #signal.signal(signal.SIGINT, signal.SIG_DFL)
     # this thing catches the ctrl-C
     signal.signal(signal.SIGINT, sigint_handler)
-    element()
+
+    parser = argparse.ArgumentParser(description='Acquire audio Data from Mic')
+    parser.add_argument('-f','--fsample', dest='sample_frequency',
+                        metavar='fs', type=float,
+                        default = DEFAULT_FS, help='sample frequency [Hz]')
+    parser.add_argument('-d','--duration', dest='duration',
+                        type=float,
+                        default = DEFAULT_DURATION, help='recording duration [s]')
+    parser.add_argument('-c','--chunk_size', dest='chunk_size',
+                        type=float,
+                        default = DEFAULT_CHUNK_SIZE, help='chunk size [s]')
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    fs         = args.sample_frequency
+    chunk_size = args.chunk_size
+    duration   = args.duration
+
+    element(rate, chunk)
 
 if __name__ == '__main__':
     main()

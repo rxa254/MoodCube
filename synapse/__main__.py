@@ -49,6 +49,7 @@ def main():
         proc = multiprocessing.Process(
             name=source_str,
             target=func,
+            args=source_args
             )
         proc.daemon = True
         logging.info(proc)
