@@ -15,8 +15,9 @@ from . import sources
 from . import sinks
 from .sources import audio
 from .sources import audio_blrms
+from .sinks import plotMoods
 from . import plot
-#from .sinks import plotMoods
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -72,7 +73,7 @@ def main():
         logging.info("initializing the Tentacles...")
         proc = multiprocessing.Process(
             name   = 'jellyfish',
-            target = jellyfish.plotJelly,
+            target = plotMoods.plotJelly,
             )
         proc.daemon   = True
         logging.info(proc)
