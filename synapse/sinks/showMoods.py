@@ -21,7 +21,10 @@ plt.rcParams.update({'font.size': 20,
 
 # this is the dimensions of the jellyfish
 # 8 tentacles, 64 LEDs / tentacle, 3 colors/LED
-zz = np.zeros((8, 64, 3))
+zz = np.random.randint(low   = 0,
+                          high  = 255,
+                          size  = (8, 64, 3),
+                          dtype = 'uint8')
 
 if __debug__:
     print zz.shape
@@ -31,12 +34,15 @@ if __debug__:
 
 fig = plt.figure(figsize=(8,2))
 im  = plt.imshow(zz, animated=True)
+plt.xticks([])
+plt.yticks([])
 fig.tight_layout()
 def updatefig(*args):
     z = np.random.randint(low   = 0,
                           high  = 255,
                           size  = zz.shape,
                           dtype = 'uint8')
+    
     im.set_array(z)
     return im,
 
@@ -44,6 +50,7 @@ def updatefig(*args):
 #leg.get_frame().set_alpha(0.5)
 #plt.savefig("TRY.pdf", bbox_inches='tight')
 ani = animation.FuncAnimation(fig, updatefig,
-                                  interval=500, blit=True)
+                                  interval = 100,
+                                  blit=True)
 plt.show()
 

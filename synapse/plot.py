@@ -32,9 +32,9 @@ def plot():
         x             = np.arange(len(data))
         lines[source] = ax.plot(x, data, label=source)
     #ax.legend()
-    #ax.autoscale_view(tight=True, scalex=False, scaley=True)
+    ax.autoscale_view(tight=True, scalex=False, scaley=True)
     #ax.set_ylim(-2**16, 2**16)
-    ax.set_ylim(-1, 20)
+    #ax.set_ylim(-1, 20)
 
     def update(packet):
         for source, data in packet.items():
