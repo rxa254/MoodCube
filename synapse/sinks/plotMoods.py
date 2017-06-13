@@ -11,7 +11,7 @@ matplotlib.use('qt4agg')  # why we have to use this one?
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
-from . import const
+from .. import const
 
 def plotJelly():    
     context = zmq.Context()
@@ -40,30 +40,32 @@ def plotJelly():
     packet = recv_data()
     for source, data in next(packet).items():
         #x             = np.arange(len(data))
-        lines[source] = ax.plot(x, data, label=source)
+        z              = data
+        #lines[source] = ax.plot(x, data, label=source)
     #ax.legend()
     #ax.autoscale_view(tight=True, scalex=False, scaley=True)
     #ax.set_ylim(-2**16, 2**16)
-    ax.set_ylim(-1, 20)
+    #ax.set_ylim(-1, 20)
 
-    def update(packet):
+    #def update(packet):
+    #    for source, data in packet.items():
+    #        x = np.arange(len(data))
+    #        lines[source][0].set_xdata(x)
+    #        lines[source][0].set_ydata(data)
+
+    def updatefig(packet):
         for source, data in packet.items():
-            x = np.arange(len(data))
-            lines[source][0].set_xdata(x)
-            lines[source][0].set_ydata(data)
-
-    def updatefig(*args):
-        z = np.random.randint(low   = 0,
-                          high  = 255,
-                          size  = zz.shape,
-                          dtype = 'uint8')
+                z = np.random.randint(low   = 0,
+                                      high  = 255,
+                                      size  = zz.shape,
+                                      dtype = 'uint8')
         im.set_array(z)
     return im,
         
     anim = animation.FuncAnimation(
         fig, updatefig, recv_data,
         interval = 30,
-        blit     = True,
+        #blit     = True,
         )
     plt.show()
 
