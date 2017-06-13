@@ -34,7 +34,7 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 
-DEFAULT_FS = 44100
+DEFAULT_FS = 22050
 DEFAULT_CHUNK_SIZE = 0.1
 DEFAULT_DURATION = 1e6
 
@@ -59,8 +59,8 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
 
     # define frequency bands for the BLRMS
     #f1 = np.array([30, 100, 300, 1000, 3000])
-    f_min = 1/chunk_size
-    f_max = RATE/2
+    f_min = 1/chunk_size    # don't go below 10 Hz
+    f_max = RATE/2.1        # slightly below Nyquist freq
     f1    = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
     # go for it
@@ -69,7 +69,10 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     blms = np.zeros(len(f1)-1)
     while True:
         data     = np.fromstring(stream.read(CHUNK), dtype = np.int16)
-        ff, psd  = welch(data, RATE, nperseg = CHUNK, scaling = 'spectrum')
+        ff, psd  = welch(data, RATE, nperseg = CHUNK, detrend='linear', scaling = 'spectrum', return_onesided=True)
+
+        if np.amax(psd) > 1e6:
+            print("Large PSD Element: " + str(np.amax(psd)))
 
         for j in range(len(f1) - 1):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
@@ -83,11 +86,9 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
         socket.send_multipart((source.encode(), msg))
 
         logging.debug(blms)
-        peak = np.average(np.abs(data))*2
-        bars = "#"*int(50*peak/2**16)
-        logging.debug("%04d %05d %s"%(i,peak,bars))
-
-        i += 1
+        #peak = np.average(np.abs(data))*2
+        #bars = "#"*int(50*peak/2**16)
+        #logging.debug("%04d %05d %s"%(i,peak,bars))
 
     # die_with_grace()
 
