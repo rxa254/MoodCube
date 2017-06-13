@@ -34,8 +34,8 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 
-DEFAULT_FS = 22050
-DEFAULT_CHUNK_SIZE = 0.1
+DEFAULT_FS = 44100
+DEFAULT_CHUNK_SIZE = 0.05
 DEFAULT_DURATION = 1e6
 
 def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
@@ -54,8 +54,9 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     logging.info(socket)
 
     p      = pyaudio.PyAudio()
-    stream = p.open(format = pyaudio.paInt16, channels = 1, rate = RATE, input = True,
-              frames_per_buffer = CHUNK)
+    stream = p.open(format = pyaudio.paInt16, channels = 1,
+                        rate = RATE, input = True,
+                        frames_per_buffer = CHUNK)
 
     # define frequency bands for the BLRMS
     #f1 = np.array([30, 100, 300, 1000, 3000])
@@ -64,22 +65,28 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     f1    = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
     # go for it
-    i    = 0
-    np.set_printoptions(formatter = {'float': '{: 3.2f}'.format})
-    blms = np.zeros(len(f1)-1)
+    #np.set_printoptions(formatter = {'float': '{: 3.2f}'.format})
+    blms = np.ones(len(f1) - 1)
     while True:
-        data     = np.fromstring(stream.read(CHUNK), dtype = np.int16)
-        ff, psd  = welch(data, RATE, nperseg = CHUNK, detrend='linear', scaling = 'spectrum', return_onesided=True)
+        data     = np.frombuffer(stream.read(CHUNK), dtype = np.int16)
+        ff, psd  = welch(data, RATE, nperseg = CHUNK,
+                             detrend = 'linear',
+                             scaling = 'spectrum',
+                             return_onesided=True)
 
-        if np.amax(psd) > 1e6:
+        if np.amax(psd) > 1e7 or np.amin(psd) < -1e7:
+            print(" ")
+            print(" ")
             print("Large PSD Element: " + str(np.amax(psd)))
+            print(" ")
+            print(" ")
 
         for j in range(len(f1) - 1):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
     
-        dt    = np.dtype(np.float32)
-        array = np.frombuffer(blms, dtype=dt)
+        dt     = np.dtype(np.float_)
+        array  = np.frombuffer(np.log10(blms), dtype=dt)
 
         source = 'audio_blrms'
         msg    = pickle.dumps({source: array})
@@ -98,26 +105,26 @@ def main():
     # this thing catches the ctrl-C
     signal.signal(signal.SIGINT, sigint_handler)
 
-    parser = argparse.ArgumentParser(description='Acquire audio Data from Mic')
-    parser.add_argument('-f','--fsample', dest='sample_frequency',
-                        metavar='fs', type=float,
-                        default = DEFAULT_FS, help='sample frequency [Hz]')
-    parser.add_argument('-d','--duration', dest='duration',
-                        type=float,
-                        default = DEFAULT_DURATION, help='recording duration [s]')
-    parser.add_argument('-c','--chunk_size', dest='chunk_size',
-                        type=float,
-                        default = DEFAULT_CHUNK_SIZE, help='chunk size [s]')
-    parser.add_argument("-v", "--verbose", help="increase output verbosity",
-                        action="store_true")
-    args = parser.parse_args()
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
-    fs         = args.sample_frequency
-    chunk_size = args.chunk_size
-    duration   = args.duration
+#    parser = argparse.ArgumentParser(description='Acquire audio Data from Mic')
+#    parser.add_argument('-f','--fsample', dest='sample_frequency',
+#                        metavar='fs', type=float,
+#                        default = DEFAULT_FS, help='sample frequency [Hz]')
+#    parser.add_argument('-d','--duration', dest='duration',
+#                        type=float,
+#                        default = DEFAULT_DURATION, help='recording duration [s]')
+#    parser.add_argument('-c','--chunk_size', dest='chunk_size',
+#                        type=float,
+#                        default = DEFAULT_CHUNK_SIZE, help='chunk size [s]')
+#    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+#                        action="store_true")
+#    args = parser.parse_args()
+#
+#    if args.verbose:
+#        logging.basicConfig(level=logging.DEBUG)
+#
+#    fs         = args.sample_frequency
+#    chunk_size = args.chunk_size
+#    duration   = args.duration
 
     element(rate, chunk)
 
