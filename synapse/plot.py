@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
+from __future__ import division
 import sys
 import zmq
 import pickle
@@ -21,17 +22,19 @@ def plot():
 
     def recv_data():
         source, msg = socket.recv_multipart()
-        dd = pickle.loads(msg)
+        dd          = pickle.loads(msg)
         yield dd
 
     fig, ax = plt.subplots()
     lines = {}
     packet = recv_data()
     for source, data in next(packet).items():
-        x = np.arange(len(data))
+        x             = np.arange(len(data))
         lines[source] = ax.plot(x, data, label=source)
-    ax.legend()
-    ax.set_ylim(-2**16, 2**16)
+    #ax.legend()
+    #ax.autoscale_view(tight=True, scalex=False, scaley=True)
+    #ax.set_ylim(-2**16, 2**16)
+    ax.set_ylim(-1, 20)
 
     def update(packet):
         for source, data in packet.items():
