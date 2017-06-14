@@ -15,6 +15,7 @@ from . import sources
 from . import sinks
 from .sources import audio
 from .sources import audio_blrms
+from .sources import simProx
 from .sinks import plotMoods
 from . import plot
 from . import barplot
@@ -51,7 +52,7 @@ def main():
         source      = source_spec[0]
         source_args = source_spec[1:]
         logging.debug((source, source_args))
-    
+
         func = eval('sources.{}.element'.format(source))
         proc = multiprocessing.Process(
             name   = source_str,
