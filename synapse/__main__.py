@@ -17,11 +17,14 @@ from .sources import audio
 from .sources import audio_blrms
 from .sinks import plotMoods
 from . import plot
+from . import barplot
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--plot', action='store_true',
+                        help="plot data")
+    parser.add_argument('-b', '--barplot', action='store_true',
                         help="plot data")
     parser.add_argument('-j', '--jellyfish', action='store_true',
                         help="Sim Jelly LEDs")
@@ -68,6 +71,16 @@ def main():
         proc.daemon   = True
         logging.info(proc)
         procs['plot'] = proc
+
+    if args.barplot:
+        logging.info("initializing plotter...")
+        proc = multiprocessing.Process(
+            name   = 'barplot',
+            target = barplot.plot,
+            )
+        proc.daemon   = True
+        logging.info(proc)
+        procs['barplot'] = proc
 
     if args.jellyfish:
         logging.info("initializing the Tentacles...")
