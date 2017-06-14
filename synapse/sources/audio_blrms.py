@@ -34,7 +34,7 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 
-DEFAULT_FS = 44100
+DEFAULT_FS = 22050
 DEFAULT_CHUNK_SIZE = 0.05
 DEFAULT_DURATION = 1e6
 
@@ -74,7 +74,7 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
                              scaling = 'spectrum',
                              return_onesided=True)
 
-        if np.amax(psd) > 1e7 or np.amin(psd) < -1e7:
+        if np.amax(psd) > 1e9 or np.amin(psd) < -1e9:
             print(" ")
             print(" ")
             print("Large PSD Element: " + str(np.amax(psd)))
@@ -85,9 +85,10 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
     
-        dt     = np.dtype(np.float_)
-        array  = np.frombuffer(np.log10(blms), dtype=dt)
-
+        #dt     = np.dtype(np.float_)
+        #array  = np.frombuffer(np.log10(blms), dtype=dt)
+        array = np.log10(blms)
+        
         source = 'audio_blrms'
         msg    = pickle.dumps({source: array})
         socket.send_multipart((source.encode(), msg))

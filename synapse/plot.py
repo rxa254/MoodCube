@@ -30,7 +30,7 @@ def plot():
     packet = recv_data()
     for source, data in next(packet).items():
         x             = np.arange(len(data))
-        lines[source] = ax.plot(x, data, label=source)
+        lines[source] = ax.plot(x, data, label=source, marker='.')
     #ax.legend()
     ax.autoscale_view(tight=True, scalex=False, scaley=True)
     #ax.set_ylim(-2**16, 2**16)

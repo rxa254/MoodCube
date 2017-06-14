@@ -8,6 +8,7 @@ import signal
 import numpy as np
 import matplotlib
 matplotlib.use('qt4agg')  # why we have to use this one?
+#matplotlib.use('GTK3Agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
@@ -57,7 +58,7 @@ def plotJelly():
         for source, data in packet.items():
                 z = np.random.randint(low   = 0,
                                       high  = 255,
-                                      size  = zz.shape,
+                                      size  = (8,64,3),
                                       dtype = 'uint8')
         im.set_array(z)
     return im,
