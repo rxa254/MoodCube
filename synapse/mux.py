@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys
 import zmq
@@ -26,15 +26,15 @@ def element(sources):
     socket_pub.bind(const.MUX_SOURCE)
     logging.info(socket_pub)
 
-    output = dict.fromkeys(sources, None)
+    output    = dict.fromkeys(sources, None)
     collected = set()
-    count = dict.fromkeys(sources, 0)
+    count     = dict.fromkeys(sources, 0)
 
     while True:
         mux = []
 
         _, msg = receiver.recv_multipart()
-        body = pickle.loads(msg)
+        body   = pickle.loads(msg)
 
         for source, data in body.items():
             if source in requested_sources:
