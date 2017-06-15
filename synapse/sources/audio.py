@@ -12,8 +12,8 @@ import numpy as np
 from .. import const
 
 CHANNELS = 1
-RATE = 44100
-CHUNK = 1024
+RATE = 22050
+CHUNK = 2048
 
 def element():
     context = zmq.Context()

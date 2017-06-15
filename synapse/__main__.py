@@ -91,7 +91,7 @@ def main():
             )
         proc.daemon   = True
         logging.info(proc)
-        procs['plotJelly'] = proc
+        procs['plotMoods'] = proc
 
     logging.info("starting processes...")
     for source, proc in procs.items():

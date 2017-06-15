@@ -8,7 +8,6 @@ import signal
 import numpy as np
 import matplotlib
 matplotlib.use('qt4agg')  # why we have to use this one?
-#matplotlib.use('GTK3Agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
@@ -32,9 +31,9 @@ def plotJelly():
                           high  = 255,
                           size  = (8, 64, 3),
                           dtype = 'uint8')
-    fig, ax = plt.subplots()
-    lines = {}
-    im  = plt.imshow(zz, animated=True)
+    fig = plt.figure(30)
+    #lines = {}
+    im  = plt.imshow(zz, interpolation='spline16')
     plt.xticks([])
     plt.yticks([])
     fig.tight_layout()
@@ -42,31 +41,28 @@ def plotJelly():
     for source, data in next(packet).items():
         #x             = np.arange(len(data))
         z              = data
-        #lines[source] = ax.plot(x, data, label=source)
-    #ax.legend()
-    #ax.autoscale_view(tight=True, scalex=False, scaley=True)
-    #ax.set_ylim(-2**16, 2**16)
-    #ax.set_ylim(-1, 20)
 
-    #def update(packet):
-    #    for source, data in packet.items():
-    #        x = np.arange(len(data))
-    #        lines[source][0].set_xdata(x)
-    #        lines[source][0].set_ydata(data)
 
     def updatefig(packet):
         for source, data in packet.items():
-                z = np.random.randint(low   = 0,
-                                      high  = 255,
-                                      size  = (8,64,3),
-                                      dtype = 'uint8')
-        im.set_array(z)
-    return im,
+            t = np.arange(len(data))
+            z = np.random.randint(low   = 0,
+                                  high  = 255,
+                                  size  = (8, 64, 3),
+                                  dtype = 'uint8')
+            N = 8 * 64 * 3
+            z = np.abs(data) / 5000
+            z = z[0:N].reshape(8,64,3)
+
+            
+            im.set_array(z)
+            #print str(np.random.randint(5))
+
         
     anim = animation.FuncAnimation(
         fig, updatefig, recv_data,
-        interval = 30,
-        #blit     = True,
+        interval = 100,
+        blit     = False,
         )
     plt.show()
 
