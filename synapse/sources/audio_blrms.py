@@ -34,9 +34,10 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 
-DEFAULT_FS = 22050
-DEFAULT_CHUNK_SIZE = 0.05
-DEFAULT_DURATION = 1e6
+# DEFAULT_FS = 22050
+DEFAULT_FS = 44100
+DEFAULT_CHUNK_SIZE = 0.2
+#DEFAULT_DURATION = 1e6
 
 def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     logging.debug("Sample Frequency is " + str(fs) + " Hz")
@@ -54,13 +55,16 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     logging.info(socket)
 
     p      = pyaudio.PyAudio()
-    stream = p.open(format = pyaudio.paInt16, channels = 1,
-                        rate = RATE, input = True,
-                        frames_per_buffer = CHUNK)
+    stream = p.open(
+        input=True,
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=RATE,
+        frames_per_buffer=CHUNK)
 
     # define frequency bands for the BLRMS
     #f1 = np.array([30, 100, 300, 1000, 3000])
-    f_min = 1/chunk_size    # don't go below 10 Hz
+    f_min = np.amin((1/chunk_size, 30))    # don't go below 30 Hz
     f_max = RATE/2.1        # slightly below Nyquist freq
     f1    = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
@@ -68,17 +72,23 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     #np.set_printoptions(formatter = {'float': '{: 3.2f}'.format})
     blms = np.ones(len(f1) - 1)
     while True:
-        data     = np.frombuffer(stream.read(CHUNK), dtype = np.int16)
+        try:
+            samples = stream.read(CHUNK)
+        except IOError:
+            logging.debug('IOError')
+            continue
+        data     = np.frombuffer(samples, dtype=np.int16)
+        data = data.astype('float_')
+        logging.debug(data)
+        
         ff, psd  = welch(data, RATE, nperseg = CHUNK,
-                             detrend = 'linear',
-                             scaling = 'spectrum',
-                             return_onesided=True)
+                         detrend = 'linear',
+                         scaling = 'spectrum',
+                         return_onesided=True)
 
         if np.amax(psd) > 1e9 or np.amin(psd) < -1e9:
             print(" ")
-            print(" ")
             print("Large PSD Element: " + str(np.amax(psd)))
-            print(" ")
             print(" ")
 
         for j in range(len(f1) - 1):
@@ -87,13 +97,13 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     
         #dt     = np.dtype(np.float_)
         #array  = np.frombuffer(np.log10(blms), dtype=dt)
-        array = np.log10(blms)
+        #blms = np.log10(blms)
         
         source = 'audio_blrms'
-        msg    = pickle.dumps({source: array})
+        logging.info((source, len(blms), blms))
+        msg    = pickle.dumps({source: blms})
         socket.send_multipart((source.encode(), msg))
 
-        logging.debug(blms)
         #peak = np.average(np.abs(data))*2
         #bars = "#"*int(50*peak/2**16)
         #logging.debug("%04d %05d %s"%(i,peak,bars))
