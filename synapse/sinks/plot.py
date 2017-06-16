@@ -18,7 +18,7 @@ def plot():
 
     socket = context.socket(zmq.SUB)
     socket.connect(const.MUX_SOURCE)
-    socket.subscribe(u'')
+    socket.setsockopt(zmq.SUBSCRIBE, '')
 
     def recv_data():
         source, msg = socket.recv_multipart()
