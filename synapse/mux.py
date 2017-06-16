@@ -19,7 +19,8 @@ def element(sources):
     receiver = context.socket(zmq.SUB)
     receiver.bind(const.MUX_SINK)
     for source in requested_sources:
-        receiver.subscribe(source)
+        logging.debug('mux subscribe source: {}'.format(source))
+        receiver.setsockopt(zmq.SUBSCRIBE, source)
     logging.info(receiver)
 
     socket_pub = context.socket(zmq.PUB)
