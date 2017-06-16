@@ -34,10 +34,8 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 
-# DEFAULT_FS = 22050
 DEFAULT_FS = 44100
 DEFAULT_CHUNK_SIZE = 0.2
-#DEFAULT_DURATION = 1e6
 
 def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     logging.debug("Sample Frequency is " + str(fs) + " Hz")
@@ -100,7 +98,7 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
         #blms = np.log10(blms)
         
         source = 'audio_blrms'
-        logging.info((source, len(blms), blms))
+        logging.debug((source, len(blms), blms))
         msg    = pickle.dumps({source: blms})
         socket.send_multipart((source.encode(), msg))
 
