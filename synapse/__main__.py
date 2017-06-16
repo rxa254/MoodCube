@@ -7,17 +7,15 @@ import argparse
 import importlib
 import collections
 import multiprocessing
+import importlib
 
 logging.basicConfig()
 
 from . import mux
 from . import sources
+from .sources import *
 from . import sinks
-from .sources import audio
-from .sources import audio_blrms
-from .sources import simProx
-from .sinks import plotMoods
-from . import plot
+from .sinks import *
 from . import barplot
 
 
@@ -67,7 +65,7 @@ def main():
         logging.info("initializing plotter...")
         proc = multiprocessing.Process(
             name   = 'plot',
-            target = plot.plot,
+            target = sinks.plot.plot,
             )
         proc.daemon   = True
         logging.info(proc)
@@ -77,7 +75,7 @@ def main():
         logging.info("initializing plotter...")
         proc = multiprocessing.Process(
             name   = 'barplot',
-            target = barplot.plot,
+            target = sinks.barplot.plot,
             )
         proc.daemon   = True
         logging.info(proc)
@@ -87,7 +85,7 @@ def main():
         logging.info("initializing the Tentacles...")
         proc = multiprocessing.Process(
             name   = 'jellyfish',
-            target = plotMoods.plotJelly,
+            target = sinks.plotMoods.plotJelly,
             )
         proc.daemon   = True
         logging.info(proc)

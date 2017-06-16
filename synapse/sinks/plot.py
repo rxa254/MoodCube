@@ -11,7 +11,7 @@ matplotlib.use('qt4agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
-from . import const
+from .. import const
 
 def plot():    
     context = zmq.Context()
@@ -26,34 +26,28 @@ def plot():
         yield dd
 
     fig, ax = plt.subplots()
-    bars   = {}
-    packet  = recv_data()
+    lines = {}
+    packet = recv_data()
     for source, data in next(packet).items():
         x             = np.arange(len(data))
-        #data = 3 * x
-        bars[source]  = ax.bar(x, data,
-                               label = source,
-                               alpha = 0.75,
-                               color = 'purple')
-        #ax.legend()
-        #ax.autoscale_view(tight=True, scalex=False, scaley=True)
-        #ax.set_ylim(-2**16, 2**16)
-        ax.set_ylim(-0.5, 10)
+        lines[source] = ax.plot(x, data, label=source, marker='.')
+    #ax.legend()
+    ax.autoscale_view(tight=True, scalex=False, scaley=True)
+    #ax.set_ylim(-2**16, 2**16)
+    #ax.set_ylim(-1, 20)
 
     def update(packet):
         for source, data in packet.items():
-            #x = np.arange(len(data))
-            #lines[source][0].set_xdata(x)
-            for k in range(len(bars[source])):
-                bars[source][k].set_height(data[k])
+            x = np.arange(len(data))
+            lines[source][0].set_xdata(x)
+            lines[source][0].set_ydata(data)
         
     anim = animation.FuncAnimation(
         fig, update, recv_data,
-        interval = 10,
-        blit = False,
+        interval=3,
+        # blit=False,
         # repeat=False,
         )
-    
     plt.show()
 
 ##########
