@@ -34,7 +34,6 @@ if fs < 1e-5:
     parser.error("Error: sample rate must be > 1e-5 Hz")
 
 
-
     
 def die_with_grace():
     stream.stop_stream()
@@ -55,7 +54,11 @@ RATE  = int(fs)
 CHUNK = int(np.floor(chunk_size * RATE))
 
 p      = pyaudio.PyAudio()
-stream = p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
+stream = p.open(format=pyaudio.paInt16,
+                channels=1,
+                rate=RATE,
+                input=True,
+                input_device_index=0,
               frames_per_buffer = CHUNK)
 
 # define frequency bands for the BLRMS
@@ -69,8 +72,12 @@ i = 0
 blrms = np.zeros(len(f1)-1)
 while i < duration/chunk_size:
     data = np.fromstring(stream.read(CHUNK), dtype=np.int16)
+
+    data = data.astype('float_') # needs to be float for welch
+
     ff, psd  = welch(data, RATE, nperseg = CHUNK, scaling='spectrum')
 
+    
     for j in range(len(f1) - 1):
         inds = (ff > f1[j]) & (ff < f1[j+1])
         blrms[j] = np.sum(psd[inds])
