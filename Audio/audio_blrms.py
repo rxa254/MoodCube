@@ -63,8 +63,8 @@ stream = p.open(format=pyaudio.paInt16,
 
 # define frequency bands for the BLRMS
 #f1 = np.array([30, 100, 300, 1000, 3000])
-f_min = 1/chunk_size
-f_max = RATE/2
+f_min = np.amin((1/chunk_size, 30))   # no reason to look below 30 Hz
+f_max = RATE/2.2
 f1 = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
 #go for a few seconds
