@@ -14,7 +14,6 @@ from scipy.signal import welch
 
 # Jamie Synapse dependencies
 import zmq
-import json
 import pickle
 import logging
 from .. import const
@@ -33,18 +32,17 @@ def sigint_handler(signum, frame):
     die_with_grace()
     sys.exit(0)
 
-
-DEFAULT_FS = 44100
 DEFAULT_CHUNK_SIZE = 0.2
 
-def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
+def element(chunk_size=DEFAULT_CHUNK_SIZE):
+    fs = const.AUDIO_RATE
+
     logging.debug("Sample Frequency is " + str(fs) + " Hz")
 
     if fs < 1e-5:
         parser.error("Error: sample rate must be > 1e-5 Hz")
 
-    RATE  = int(fs)
-    CHUNK = int(np.floor(chunk_size * RATE))
+    CHUNK = int(np.floor(chunk_size * fs))
 
     context = zmq.Context()
 
@@ -56,14 +54,14 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
     stream = p.open(
         input=True,
         format=pyaudio.paInt16,
-        channels=1,
-        rate=RATE,
+        channels=const.AUDIO_CHANNEL,
+        rate=const.AUDIO_RATE,
         frames_per_buffer=CHUNK)
 
     # define frequency bands for the BLRMS
     #f1 = np.array([30, 100, 300, 1000, 3000])
     f_min = np.amin((1/chunk_size, 30))    # don't go below 30 Hz
-    f_max = RATE/2.1        # slightly below Nyquist freq
+    f_max = fs/2.1        # slightly below Nyquist freq
     f1    = np.logspace(np.log10(f_min), np.log10(f_max), 7)
 
     # go for it
@@ -79,7 +77,7 @@ def element(fs=DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
         data = data.astype('float_')
         logging.debug(data)
         
-        ff, psd  = welch(data, RATE, nperseg = CHUNK,
+        ff, psd  = welch(data, fs, nperseg = CHUNK,
                          detrend = 'linear',
                          scaling = 'spectrum',
                          return_onesided=True)
@@ -135,7 +133,7 @@ def main():
 #    chunk_size = args.chunk_size
 #    duration   = args.duration
 
-    element(rate, chunk)
+    element(chunk)
 
 if __name__ == '__main__':
     main()

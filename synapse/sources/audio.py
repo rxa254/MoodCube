@@ -11,8 +11,6 @@ import numpy as np
 
 from .. import const
 
-CHANNELS = 1
-RATE = 44100
 CHUNK = 512
 
 def element():
@@ -27,8 +25,8 @@ def element():
     stream = p.open(
         input=True,
         format=pyaudio.paInt16,
-        channels=CHANNELS,
-        rate=RATE,
+        channels=const.AUDIO_CHANNEL,
+        rate=const.AUDIO_RATE,
         frames_per_buffer=CHUNK,
         )
 
