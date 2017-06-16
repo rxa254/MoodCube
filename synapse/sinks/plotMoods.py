@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 
 from .. import const
+from .. import opc
+
+sim = False
 
 def plotJelly():    
     context = zmq.Context()
@@ -25,18 +28,30 @@ def plotJelly():
         dd          = pickle.loads(msg)
         yield dd
 
+    numStrips        = 8
+    numLEDperStrip   = 64  # no. of LEDs per strip
+    numLEDs = numStrips * numLEDperStrip
+    jelly = opc.Client('localhost:7890')
+
+    black = [ (0,0,0) ] * numLEDs
+    white = [ (255,255,255) ] * numLEDs
+
     # this is the dimensions of the jellyfish
     # 8 tentacles, 64 LEDs / tentacle, 3 colors/LED
     zz = np.random.randint(low   = 0,
                           high  = 255,
-                          size  = (8, 64, 3),
+                          size  = (numStrips, numLEDperStrip, 3),
                           dtype = 'uint8')
-    fig = plt.figure(30)
-    #lines = {}
-    im  = plt.imshow(zz, interpolation='spline16')
-    plt.xticks([])
-    plt.yticks([])
-    fig.tight_layout()
+
+    if sim == True:
+        fig = plt.figure(30)
+        im  = plt.imshow(zz, interpolation='spline16')
+        plt.xticks([])
+        plt.yticks([])
+        fig.tight_layout()
+    else:
+        jelly.pu_pixels(zz)
+        
     packet = recv_data()
     for source, data in next(packet).items():
         #x             = np.arange(len(data))
@@ -54,17 +69,19 @@ def plotJelly():
             z = np.abs(data) / 5000
             z = z[0:N].reshape(8,64,3)
 
-            
-            im.set_array(z)
+            if sim == True:
+                im.set_array(z)
+            else:
+                jelly.pu_pixels(zz)
             #print str(np.random.randint(5))
 
-        
-    anim = animation.FuncAnimation(
-        fig, updatefig, recv_data,
-        interval = 100,
-        blit     = False,
-        )
-    plt.show()
+    if sim == True:
+        anim = animation.FuncAnimation(
+            fig, updatefig, recv_data,
+            interval = 100,
+            blit     = False,
+            )
+        plt.show()
 
 ##########
 
