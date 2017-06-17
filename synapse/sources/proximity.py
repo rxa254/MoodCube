@@ -17,9 +17,11 @@ from .. import const
 rangeLimit = 666.666
 
 SOURCE = 'proximity'
+
 # this is the thing that get the data
 def element(fs):
 
+    fs = int(fs)
     context = zmq.Context()
 
     socket  = context.socket(zmq.PUB)
@@ -34,14 +36,14 @@ def element(fs):
         if x1 < 0.1:
             x1 = rangeLimit
         data = [x1, x2, x3, x4]
-        if __debug__:
-            print(data)
+        logging.debug(data)
 
         logging.debug((SOURCE, len(data), data))
         msg = pickle.dumps({
-            'source'     : SOURCE,
-            'data'       : data,
-            'sample_rate': fs,
+            SOURCE: {
+                'data'       : data,
+                'sample_rate': fs,
+                }
             })
         socket.send_multipart((SOURCE.encode(), msg))
 

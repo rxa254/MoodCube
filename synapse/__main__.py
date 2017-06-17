@@ -4,10 +4,8 @@ import sys
 import time
 import logging
 import argparse
-import importlib
 import collections
 import multiprocessing
-import importlib
 
 logging.basicConfig()
 
@@ -27,6 +25,8 @@ def main():
                         help="plot data")
     parser.add_argument('-j', '--jellyfish', action='store_true',
                         help="Sim Jelly LEDs")
+    parser.add_argument('-t', '--testdrive', action='store_true',
+                        help="test Drive the Jellyfish")
     parser.add_argument('sources', metavar='SOUCE', nargs='+',
                         help="source spec")
 
@@ -34,15 +34,7 @@ def main():
 
     procs = collections.OrderedDict()
 
-    logging.info("initializing mux...")
-    proc = multiprocessing.Process(
-        name   = 'mux',
-        target = mux.element,
-        args   = [args.sources],
-        )
-    proc.daemon  = True
-    logging.info(proc)
-    procs['mux'] = proc
+    source_list = []
 
     logging.info("initializing sources...")
     for source_str in args.sources:
@@ -50,6 +42,7 @@ def main():
         source      = source_spec[0]
         source_args = source_spec[1:]
         logging.debug((source, source_args))
+        source_list.append(source)
 
         func = eval('sources.{}.element'.format(source))
         proc = multiprocessing.Process(
@@ -60,6 +53,16 @@ def main():
         proc.daemon       = True
         logging.info(proc)
         procs[source_str] = proc
+
+    logging.info("initializing mux...")
+    proc = multiprocessing.Process(
+        name   = 'mux',
+        target = mux.element,
+        args   = [source_list],
+        )
+    proc.daemon  = True
+    logging.info(proc)
+    procs['mux'] = proc
 
     if args.plot:
         logging.info("initializing plotter...")
@@ -86,6 +89,16 @@ def main():
         proc = multiprocessing.Process(
             name   = 'jellyfish',
             target = sinks.plotMoods.plotJelly,
+            )
+        proc.daemon   = True
+        logging.info(proc)
+        procs['plotMoods'] = proc
+
+    if args.testdrive:
+        logging.info("starting the test drive...")
+        proc = multiprocessing.Process(
+            name   = 'testdrive',
+            target = sinks.testdrive.plotJelly,
             )
         proc.daemon   = True
         logging.info(proc)

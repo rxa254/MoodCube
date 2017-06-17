@@ -41,7 +41,7 @@ while True:
     # get remainder. Don't want the random walk to go off
     # to infinity, so this divides out by 255 so if it goes
     # too big it just flips back to zero
-    g = np.remainder(g, 255) 
+    g = np.remainder(g, 155) 
     sleepTime = tau
     #+ np.random.random_sample()
 

@@ -5,11 +5,13 @@ import sys
 import zmq
 import pickle
 import signal
+import collections
 import numpy as np
 import matplotlib
 matplotlib.use('qt4agg')  # why we have to use this one?
 import matplotlib.pyplot as plt
 from matplotlib import animation
+import logging
 
 from .. import const
 from .. import opc
@@ -21,7 +23,34 @@ numLEDs = numStrips * numLEDperStrip
 sim = False
 
 
-def process_data(packet):
+class DataBuffer(object):
+    def __init__(self, seconds):
+        self.seconds = seconds
+        self.collected = collections.OrderedDict()
+
+    def append(self, packet):
+        for source, data in packet.iteritems():
+            sample_rate = data['sample_rate']
+
+            desired_samples = self.seconds * sample_rate
+
+            # check sample rate corresponds to an integer number of
+            # samples for the desired number of seconds
+            assert (desired_samples % 1) == 0
+
+            if source not in self.collected:
+                self.collected[source] = collections.deque(maxlen=desired_samples)
+
+            self.collected[source].append(data['data'])
+
+    def get(self):
+        output = []
+        for source, queue in self.collected.iteritems():
+            output.append(np.concatenate(queue))
+        return np.concatenate(output)
+
+
+def process_data(db, packet):
     z = packet['audio_blrms']
     zz = np.zeros((numLEDs, 3))
     for i,a in enumerate(list(z)):
@@ -34,13 +63,24 @@ def process_data(packet):
             # zz[si:si+64, j] = c[j]
     return zz
 
+    # # for source, data in packet.iteritems():
+    # #     logging.info((source, data))
+    # db.append(packet)
+    # zz = db.get()
 
-def plotJelly():    
+    # return zz
+
+
+def plotJelly(seconds=1):
+    seconds = int(seconds)
+
     context = zmq.Context()
 
     socket = context.socket(zmq.SUB)
     socket.connect(const.MUX_SOURCE)
     socket.setsockopt(zmq.SUBSCRIBE, '')
+
+    db = DataBuffer(seconds)
 
     def recv_data():
         source, msg = socket.recv_multipart()
@@ -55,7 +95,7 @@ def plotJelly():
         fig.tight_layout()
 
         def updatefig(packet):
-            z = process_data(packet)
+            z = process_data(db, packet)
             im.set_array(z)
 
         anim = animation.FuncAnimation(
@@ -71,8 +111,10 @@ def plotJelly():
 
         while True:
             packet = recv_data()
-            z = process_data(packet)
-            jelly.put_pixels(z)
+            z = process_data(db, packet)
+            logging.info(len(z))
+            # if z:
+            #     jelly.put_pixels(z)
 
 ##########
 

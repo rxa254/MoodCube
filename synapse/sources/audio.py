@@ -42,7 +42,12 @@ def element():
         data = np.frombuffer(samples, dtype=dt)
 
         logging.debug((SOURCE, len(data), data))
-        msg = pickle.dumps({SOURCE: data})
+        msg = pickle.dumps({
+            SOURCE: {
+                'data': data,
+                'sample_rate': 1./CHUNK,
+                }
+            })
         socket.send_multipart((SOURCE.encode(), msg))
 
 ##########

@@ -7,6 +7,7 @@ import pickle
 import signal
 import logging
 import argparse
+from collections import OrderedDict
 import numpy as np
 
 from . import const
@@ -27,7 +28,7 @@ def element(sources):
     socket_pub.bind(const.MUX_SOURCE)
     logging.info(socket_pub)
 
-    output    = dict.fromkeys(sources, None)
+    output    = OrderedDict().fromkeys(sources, None)
     collected = set()
     count     = dict.fromkeys(sources, 0)
 
@@ -35,9 +36,10 @@ def element(sources):
         mux = []
 
         _, msg = receiver.recv_multipart()
-        body   = pickle.loads(msg)
+        body = pickle.loads(msg)
+        logging.debug(body)
 
-        for source, data in body.items():
+        for source, data in body.iteritems():
             if source in requested_sources:
                 # FIXME: how to append data?
                 output[source] = data
@@ -47,7 +49,7 @@ def element(sources):
                 # statistics
                 count[source] += 1
                 if count[source] > 1:
-                    logging.info(count)
+                    logging.debug(count)
 
         if collected == requested_sources:
             msg = pickle.dumps(output)

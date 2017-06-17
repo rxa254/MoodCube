@@ -27,3 +27,41 @@
 ![zoom in on a NeoPixel](images/led_strips_single-neopixel.jpg)
 ------
 * GitHub Markdown: https://guides.github.com/features/mastering-markdown/
+
+
+### auto-start with systemd
+
+Both the fcserver and synapse processes will auto-start using the "pi"
+user system --user session:
+
+* /home/pi/.config/systemd/user/fcserver.service
+* /home/pi/.config/systemd/user/moodcube.service
+
+The services are called "fcserver" and "moodcube".  They launch the
+following scripts:
+
+* fcserver: /home/pi/GIT/MoodCube/FadeCandy/fcserver_launch.sh
+* moodcube: /home/pi/GIT/MoodCube/launch
+
+You can control the processes using the "systemctl --user" command.  *
+show service status:
+
+  $ systemctl --user status moodcube
+
+* reload configuration (only needed if you change the config file in
+  ~/.config/systemd/user":
+
+  $ systemctl --user daemon-reload
+
+* restart service:
+
+  $ systemctl --user restart moodcube
+
+* stop service:
+
+  $ systemctl --user stop moodcube
+
+* follow logs:
+
+  $ sudo journalctl -f
+
