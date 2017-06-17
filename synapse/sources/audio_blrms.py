@@ -32,6 +32,7 @@ def sigint_handler(signum, frame):
     die_with_grace()
     sys.exit(0)
 
+SOURCE = 'audio_blrms'
 DEFAULT_CHUNK_SIZE = 0.2
 
 def element(chunk_size=DEFAULT_CHUNK_SIZE):
@@ -62,7 +63,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE):
     #f1 = np.array([30, 100, 300, 1000, 3000])
     f_min = np.amin((1/chunk_size, 30))    # don't go below 30 Hz
     f_max = fs/2.1        # slightly below Nyquist freq
-    f1    = np.logspace(np.log10(f_min), np.log10(f_max), 7)
+    f1    = np.logspace(np.log10(f_min), np.log10(f_max), 9)
 
     # go for it
     #np.set_printoptions(formatter = {'float': '{: 3.2f}'.format})
@@ -71,7 +72,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE):
         try:
             samples = stream.read(CHUNK)
         except IOError:
-            logging.debug('IOError')
+            logging.warning((SOURCE, e))
             continue
         data     = np.frombuffer(samples, dtype=np.int16)
         data = data.astype('float_')
@@ -95,10 +96,9 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE):
         #array  = np.frombuffer(np.log10(blms), dtype=dt)
         #blms = np.log10(blms)
         
-        source = 'audio_blrms'
-        logging.debug((source, len(blms), blms))
-        msg    = pickle.dumps({source: blms})
-        socket.send_multipart((source.encode(), msg))
+        logging.debug((SOURCE, len(blms), blms))
+        msg    = pickle.dumps({SOURCE: blms})
+        socket.send_multipart((SOURCE.encode(), msg))
 
         #peak = np.average(np.abs(data))*2
         #bars = "#"*int(50*peak/2**16)

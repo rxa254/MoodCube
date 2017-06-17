@@ -11,7 +11,9 @@ import numpy as np
 
 from .. import const
 
-CHUNK = 512
+SOURCE = 'audio'
+# CHUNK = 8192
+CHUNK = 4096
 
 def element():
     context = zmq.Context()
@@ -33,15 +35,15 @@ def element():
     while True:
         try:
             samples = stream.read(CHUNK)
-        except IOError:
+        except IOError as e:
+            logging.warning((SOURCE, e))
             continue
         dt = np.dtype(np.int16)
         data = np.frombuffer(samples, dtype=dt)
 
-        source = 'audio'
-        logging.debug((source, len(data), data))
-        msg = pickle.dumps({source: data})
-        socket.send_multipart((source.encode(), msg))
+        logging.debug((SOURCE, len(data), data))
+        msg = pickle.dumps({SOURCE: data})
+        socket.send_multipart((SOURCE.encode(), msg))
 
 ##########
 
