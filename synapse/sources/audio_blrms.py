@@ -99,7 +99,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
     
-        blms = np.log10(blms)
+        blms = np.log10(blms) + 1
 
         # whiten
         whiteFilt += blms
