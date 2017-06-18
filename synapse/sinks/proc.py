@@ -39,6 +39,9 @@ N = int(t_prox_hist * fsample)
 Nsensors = 8
 prox = np.zeros((N, Nsensors))
 
+audio_target = np.array([0, 1, 2, 2.5, 2.7, 3, 3.1, 0]) 
+prox_target = np.array([1, 1, 1, 1])
+
 class ProcessData(object):
     def __init__(self, sources, samples):
         # input data ring buffer
@@ -52,25 +55,34 @@ class ProcessData(object):
         data = self.db.get()
         logging.info(len(data))
         print(data)
+        
+        l1_error = np.sum(data[0:8] - audio_target)
 
+        l1_prox_error = np.sum(data[8:12] - prox_target)
+        
         if self.inpLayer is None:
             self.inpLayer = 1 * np.random.randn(numLEDs, len(data))
-            self.secLayer = 1 * np.random.randn(3*numLEDs, numLEDs)
+            self.secLayer = 1 * np.random.rand(3*numLEDs, numLEDs)
 
         # print((data.shape, self.inpLayer.shape))
         a  = np.dot(data.T, self.inpLayer.T)
         #print(a)
         #a /= np.amax(a)
-        a  = np.tanh(a)
+        a  = np.tanh(a)/2 + 1
         # print(a)
         # print((a.shape, self.secLayer.shape))
         zz = np.dot(a.T, self.secLayer.T)
         #zz = np.tanh(zz)/2 + 1
         # print((zz.shape))
+
+        l1_delta = (0.3 * l1_error + 1 * l1_prox_error) * a
+        self.inpLayer += np.outer(l1_delta, data)
+
+        
         bias_noise = 55 * np.random.randn(numLEDs, 3)
         zz = (zz - 100)/2
 
         print(zz)
-        out = zz.reshape(3, numLEDs).T + 0*bias_noise
+        out = zz.reshape(3, numLEDs).T + 3/l1_error*bias_noise
         # return 512 x 3 matrix for LEDs
         return out
