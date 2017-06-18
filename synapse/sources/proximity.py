@@ -19,7 +19,7 @@ rangeLimit = 666.666
 SOURCE = 'proximity'
 
 # this is the thing that get the data
-def element(fs):
+def element(fs=1):
 
     fs = int(fs)
     context = zmq.Context()

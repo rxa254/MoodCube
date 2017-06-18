@@ -33,9 +33,10 @@ def sigint_handler(signum, frame):
     sys.exit(0)
 
 SOURCE = 'audio_blrms'
+DEFAULT_NBANDS = 8
 DEFAULT_CHUNK_SIZE = 0.2
 
-def element(chunk_size=DEFAULT_CHUNK_SIZE):
+def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
     chunk_size = float(chunk_size)
     fs = const.AUDIO_RATE
 
@@ -64,7 +65,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE):
     #f1 = np.array([30, 100, 300, 1000, 3000])
     f_min = min(1/chunk_size, 30)    # don't go below 30 Hz
     f_max = fs/2.1        # slightly below Nyquist freq
-    f1    = np.logspace(np.log10(f_min), np.log10(f_max), 9)
+    f1    = np.logspace(np.log10(f_min), np.log10(f_max), nbands+1)
 
     # go for it
     #np.set_printoptions(formatter = {'float': '{: 3.2f}'.format})
@@ -108,32 +109,8 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE):
 
 # ===============================================
 def main():
-    #signal.signal(signal.SIGINT, signal.SIG_DFL)
-    # this thing catches the ctrl-C
     signal.signal(signal.SIGINT, sigint_handler)
-
-#    parser = argparse.ArgumentParser(description='Acquire audio Data from Mic')
-#    parser.add_argument('-f','--fsample', dest='sample_frequency',
-#                        metavar='fs', type=float,
-#                        default = DEFAULT_FS, help='sample frequency [Hz]')
-#    parser.add_argument('-d','--duration', dest='duration',
-#                        type=float,
-#                        default = DEFAULT_DURATION, help='recording duration [s]')
-#    parser.add_argument('-c','--chunk_size', dest='chunk_size',
-#                        type=float,
-#                        default = DEFAULT_CHUNK_SIZE, help='chunk size [s]')
-#    parser.add_argument("-v", "--verbose", help="increase output verbosity",
-#                        action="store_true")
-#    args = parser.parse_args()
-#
-#    if args.verbose:
-#        logging.basicConfig(level=logging.DEBUG)
-#
-#    fs         = args.sample_frequency
-#    chunk_size = args.chunk_size
-#    duration   = args.duration
-
-    element(chunk)
+    element()
 
 if __name__ == '__main__':
     main()

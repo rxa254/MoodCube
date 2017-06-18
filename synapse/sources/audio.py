@@ -12,12 +12,10 @@ import numpy as np
 from .. import const
 
 SOURCE = 'audio'
-# CHUNK = 8192
 CHUNK = 4096
 
 def element():
     context = zmq.Context()
-
     socket = context.socket(zmq.PUB)
     socket.connect(const.MUX_SINK)
     logging.info(socket)
@@ -53,9 +51,8 @@ def element():
 ##########
 
 def main():
-    channels = [int(c) for c in sys.argv[1:]]
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    element(channels)
+    element()
 
 if __name__ == '__main__':
     main()
