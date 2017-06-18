@@ -2,6 +2,7 @@
 
 import sys
 import time
+import signal
 import logging
 import argparse
 import collections
@@ -16,6 +17,7 @@ from . import sinks
 from .sinks import *
 from . import barplot
 
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 def main():
     parser = argparse.ArgumentParser()
