@@ -28,8 +28,19 @@
 ------
 * GitHub Markdown: https://guides.github.com/features/mastering-markdown/
 
+### Learning
+* stochastic gradient method with least mean squares
 
-### auto-start with systemd
+
+### synapse sensors (sources)
+
+* audio                     data=((CHUNK,), int16), fs=1/CHUNK, (-16k, 16k)
+* audio_blrms:chunk,bands   data=((bands,), int16), fs=1/chunk, (-16k, 16k)
+* proximity:fs              data=((bands,), int16), fs=fs,      (0, 400)
+* date:fs                   data=(dt.weekday(), dt.hour, dt.minute, dt.second), fs=fs
+
+
+### synapse auto-start with systemd
 
 Both the fcserver and synapse processes will auto-start using the "pi"
 user system --user session:
@@ -63,5 +74,4 @@ show service status:
 
 * follow logs:
 
-  $ sudo journalctl -f
-
+  $ journalctl -f
