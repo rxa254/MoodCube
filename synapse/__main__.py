@@ -5,6 +5,7 @@ import time
 import signal
 import logging
 import argparse
+import numpy as np
 import collections
 import multiprocessing
 
@@ -17,7 +18,18 @@ from . import sinks
 from .sinks import *
 from . import barplot
 
-signal.signal(signal.SIGINT, signal.SIG_DFL)
+from . import const
+from . import opc
+
+
+def kill_fc(*args):
+    jelly = opc.Client(const.OPC_ADDR)
+    jelly.put_pixels(np.zeros((512, 3)))
+    sys.exit()
+
+# signal.signal(signal.SIGINT, signal.SIG_DFL)
+signal.signal(signal.SIGINT, kill_fc)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -91,6 +103,7 @@ def main():
         proc = multiprocessing.Process(
             name   = 'jellyfish',
             target = sinks.plotMoods.plotJelly,
+            args   = [source_list],
             )
         proc.daemon   = True
         logging.info(proc)
@@ -101,6 +114,7 @@ def main():
         proc = multiprocessing.Process(
             name   = 'testdrive',
             target = sinks.testdrive.plotJelly,
+            args   = [source_list],
             )
         proc.daemon   = True
         logging.info(proc)
