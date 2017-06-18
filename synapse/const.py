@@ -7,3 +7,5 @@ MUX_SOURCE = 'tcp://127.0.0.1:{}'.format(SYNAPSE_PORTS[1])
 
 AUDIO_CHANNEL = 1
 AUDIO_RATE = 44100
+
+OPC_ADDR = 'localhost:7890'

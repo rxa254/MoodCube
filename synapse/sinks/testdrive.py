@@ -41,8 +41,6 @@ def process_data(packet):
     fsample = z['sample_rate']
     
     data      = np.asarray(z['data'])
-    whiteFilt += data 
-    data      -= (whiteFilt / (k+1))
     #data     = data / 0.001   # scale to unity
     logging.debug(k)
     prox[1:] = prox[0:-1]
@@ -56,15 +54,15 @@ def process_data(packet):
     #zz      = np.zeros(numLEDs * 3)
     
     # return 512 x 3 matrix for LEDs
-    zz = 25 * zz
+    zz = 25 * zz + 555
 
     
     k += 1
-    zz = np.floor(np.clip(zz, 0, 155))
+    zz = np.floor(np.clip(zz, 0, 100))
     return zz
 
 
-def plotJelly():    
+def plotJelly(sources, seconds=1):
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
     socket.connect(const.MUX_SOURCE)
