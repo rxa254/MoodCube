@@ -1,0 +1,11 @@
+#!/bin/bash
+
+export PYTHONPATH=/home/pi/GIT/MoodCube
+
+export LOG_LEVEL=INFO
+
+exec python -m synapse \
+     -t \
+     audio_blrms:0.2 \
+     proximity:2 \
+     date:1
