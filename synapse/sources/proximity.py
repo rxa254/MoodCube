@@ -35,7 +35,7 @@ def element(fs=1):
         x4 = DAQC.getRANGE(0, 3, 'c')  # get distance [cm]
         if x1 < 0.1:
             x1 = rangeLimit
-        data = [x1, x2, x3, x4]
+        data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
         logging.debug(data)
 
         logging.debug((SOURCE, len(data), data))

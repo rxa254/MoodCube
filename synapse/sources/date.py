@@ -25,7 +25,7 @@ def element(fs=1):
         dt = datetime.now()
 
         data = np.array([
-            dt.weekday(), dt.hour, dt.minute, dt.second,
+            dt.weekday()/6., dt.hour/23., dt.minute/59., dt.second/59.,
             ])
 
         logging.debug((SOURCE, len(data), data))

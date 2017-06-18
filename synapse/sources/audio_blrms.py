@@ -71,7 +71,12 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
     #np.set_printoptions(formatter = {'float': '{: 3.2f}'.format})
     blms = np.ones(len(f1) - 1)
 
+    k = -1
+    whiteFilt = np.zeros(nbands)
+
     while True:
+        k += 1
+
         try:
             samples = stream.read(CHUNK)
         except IOError:
@@ -95,6 +100,10 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
     
         blms = np.log10(blms)
+
+        # whiten
+        whiteFilt += blms
+        blms -= (whiteFilt / (k+1))
 
         logging.debug((SOURCE, len(blms), blms))
 
