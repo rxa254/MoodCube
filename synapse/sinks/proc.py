@@ -68,6 +68,11 @@ class ProcessData(object):
         a  = np.dot(data.T, self.inpLayer.T)
         #print(a)
         #a /= np.amax(a)
+
+        # Exponential Linear Units https://arxiv.org/abs/1511.07289
+        #alpha = 1  
+        #a = alpha * (np.exp(a) - 1)
+
         a  = np.tanh(a)/2 + 1
         # print(a)
         # print((a.shape, self.secLayer.shape))
