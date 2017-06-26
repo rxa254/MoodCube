@@ -44,7 +44,7 @@ def ProximityData(t, d_0, dx, N):
     d = d_0 * np.ones((len(t), N))   # average distance is d_0 [m]
     for ii in range(len(t)):
         for jj in range(N):
-            deltaX = np.random.normal(0, dx/100)
+            deltaX   = rayleigh.rvs() - 1 
             d[ii,jj] = d[ii-1,jj] + deltaX
 
     return d
@@ -61,18 +61,18 @@ def AudioSpectrumData(t, Nbands):
 
 DEFAULT_FS = 1
 DEFAULT_CHUNK_SIZE = 1
+SOURCE = 'proximity'
 
-def element(fs = DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
+def element(fs = DEFAULT_FS, chunk_size = DEFAULT_CHUNK_SIZE):
 
 
     # mke some data
     fsample = fs     # [Hz]
     dur     = chunk_size   # seconds
-    tt      = np.arange(start=0, stop=dur, step=1/fsample)
+    tt      = np.arange(start = 0, stop = dur, step = 1/fsample)
 
-    Nprox = 4
-    Nbands = 3
-    d_mean = 50
+    Nprox   = 4
+    d_mean  = 50
 
     context = zmq.Context()
     socket  = context.socket(zmq.PUB)
@@ -85,9 +85,17 @@ def element(fs = DEFAULT_FS, chunk_size=DEFAULT_CHUNK_SIZE):
         #blms = AudioSpectrumData(tt, Nbands)         # decibels
         array = ds
 
-        source = 'simData'
-        msg    = pickle.dumps({source: array})
+        logging.debug((SOURCE, len(data), data))
+        #msg    = pickle.dumps({source: array})
+        msg = pickle.dumps({
+            SOURCE: {
+                'data'       : data,
+                'sample_rate': fs,
+                }
+            })
         socket.send_multipart((source.encode(), msg))
+
+        time.sleep(1/fs)
 
 
 # ===============================================

@@ -7,7 +7,7 @@ import pickle
 import signal
 import numpy as np
 import matplotlib
-matplotlib.use('qt4agg')  # why we have to use this one?
+matplotlib.use('qt4agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import logging
@@ -16,13 +16,13 @@ from .. import const
 from .. import opc
 from . import proc
 
-sim = False
+sim = 1
 
 def plotJelly(sources, samples=1):
     seconds = int(samples)
 
     context = zmq.Context()
-    socket = context.socket(zmq.SUB)
+    socket  = context.socket(zmq.SUB)
     socket.connect(const.MUX_SOURCE)
     socket.setsockopt(zmq.SUBSCRIBE, '')
 
@@ -33,11 +33,12 @@ def plotJelly(sources, samples=1):
         return pickle.loads(msg)
 
     if sim == True:
-        z = process_data(recv_data())
+        z   = process_data(recv_data())
         fig = plt.figure(30)
         im  = plt.imshow(z, interpolation='spline16')
         plt.xticks([])
         plt.yticks([])
+        print('---***---')
         fig.tight_layout()
 
         def updatefig(packet):

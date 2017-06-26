@@ -55,9 +55,9 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
 
     p      = pyaudio.PyAudio()
     stream = p.open(
-        input=True,
-        format=pyaudio.paInt16,
-        channels=const.AUDIO_CHANNEL,
+        input    = True,
+        format   = pyaudio.paInt16,
+        channels = const.AUDIO_CHANNEL,
         rate=const.AUDIO_RATE,
         frames_per_buffer=CHUNK)
 
@@ -99,7 +99,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
     
-        blms = np.log10(blms) + 1
+        blms = np.log10(blms) + 1    # I suspect this +1 is bad
 
         # whiten
         whiteFilt += blms
@@ -110,7 +110,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
         msg = pickle.dumps({
             SOURCE: {
                 'data': blms,
-                'sample_rate': 1./chunk_size,
+                'sample_rate': 1/chunk_size,
                 }
             })
 

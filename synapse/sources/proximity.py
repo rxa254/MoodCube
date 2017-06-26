@@ -5,8 +5,8 @@ import time, sys, signal
 import argparse
 
 import numpy as np
-
-import DAQCplate as DAQC
+from scipy.stats import rayleigh
+#import DAQCplate as DAQC
 
 # Jamie Synapse dependencies
 import zmq
@@ -16,27 +16,54 @@ from .. import const
 
 rangeLimit = 666.666
 
+# simulated data
+# random distance data from N UltraSonic proximity sensors
+def ProximityData(t, d_0, dx, N):
+    # average distance = d_0
+    # movement scale is dx
+    # number of prox sensors = N
+    d = d_0 * np.ones((len(t), N))   # average distance is d_0 [m]
+    for ii in range(len(t)):
+        for jj in range(N):
+            deltaX   = rayleigh.rvs() - 1 
+            d[ii,jj] = d[ii-1,jj] + deltaX
+
+    return d
+
+sim = True
+
 SOURCE = 'proximity'
-
+Nprox   = 4
+d_mean  = 150   # average distance for sim data
 # this is the thing that get the data
-def element(fs=1):
+def element(fsample):
 
-    fs = int(fs)
+    fs = int(fsample)
+
     context = zmq.Context()
-
     socket  = context.socket(zmq.PUB)
     socket.connect(const.MUX_SINK)
     logging.info(socket)
-
+        
     while True:
-        x1 = DAQC.getRANGE(0, 0, 'c')  # get distance [cm]
-        x2 = DAQC.getRANGE(0, 1, 'c')  # get distance [cm]
-        x3 = DAQC.getRANGE(0, 2, 'c')  # get distance [cm]
-        x4 = DAQC.getRANGE(0, 3, 'c')  # get distance [cm]
-        if x1 < 0.1:
-            x1 = rangeLimit
-        data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
-        logging.debug(data)
+        # do SIM if sample frequency negative
+        if sim == True:
+            print fs, fsample
+            t = [1]
+            ds    = ProximityData(t, d_mean, 15, Nprox)   #  [cm]
+            data  = ds/100
+            print data
+            logging.debug(data)
+        else:
+            vv = 39
+            #x1 = DAQC.getRANGE(0, 0, 'c')  # get distance [cm]
+            #x2 = DAQC.getRANGE(0, 1, 'c')  # get distance [cm]
+            #x3 = DAQC.getRANGE(0, 2, 'c')  # get distance [cm]
+            #x4 = DAQC.getRANGE(0, 3, 'c')  # get distance [cm]
+            #if x1 < 0.1:
+            #    x1 = rangeLimit
+            #data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
+
 
         logging.debug((SOURCE, len(data), data))
         msg = pickle.dumps({
