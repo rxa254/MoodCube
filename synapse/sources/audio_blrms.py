@@ -75,14 +75,13 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
     whiteFilt = np.zeros(nbands)
 
     while True:
-        k += 1
 
         try:
             samples = stream.read(CHUNK)
         except IOError:
             logging.warning((SOURCE, e))
             continue
-        data     = np.frombuffer(samples, dtype=np.int16)
+        data = np.frombuffer(samples, dtype = np.int16)
         data = data.astype('float_')
         
         ff, psd  = welch(data, fs, nperseg = CHUNK,
@@ -98,12 +97,13 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
         for j in range(len(f1) - 1):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
-    
-        blms = np.log10(blms) + 1    # I suspect this +1 is bad
 
         # whiten
+        k += 1
         whiteFilt += blms
-        blms -= (whiteFilt / (k+1))
+        whiteFilt  = whiteFilt / (k+1)
+        blms       = blms / whiteFilt
+        blms       = np.log10(blms)
 
         logging.debug((SOURCE, len(blms), blms))
 

@@ -42,7 +42,7 @@ def process_data(packet):
     
     data      = np.asarray(z['data'])
     #data     = data / 0.001   # scale to unity
-    logging.debug(k)
+    #logging.debug(k)
     prox[1:] = prox[0:-1]
     prox[0]  = data
     # Exponential Linear Units https://arxiv.org/abs/1511.07289
@@ -75,7 +75,7 @@ def plotJelly(sources, seconds=1):
         source, msg = socket.recv_multipart()
         return pickle.loads(msg)
 
-    if sim == True:
+    if sim:
         z = process_data(recv_data())
         fig = plt.figure(30)
         im  = plt.imshow(z, interpolation='spline16')

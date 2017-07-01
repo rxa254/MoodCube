@@ -16,7 +16,7 @@ from .. import const
 from .. import opc
 from . import proc
 
-sim = 1
+sim = True
 
 def plotJelly(sources, samples=1):
     seconds = int(samples)
@@ -32,24 +32,48 @@ def plotJelly(sources, samples=1):
         source, msg = socket.recv_multipart()
         return pickle.loads(msg)
 
-    if sim == True:
-        z   = process_data(recv_data())
-        fig = plt.figure(30)
-        im  = plt.imshow(z, interpolation='spline16')
+    if sim:
+        print('---***---')
+        z0  = process_data(recv_data())
+        print z0
+        fig = plt.figure(33)
+        #print z0.shape
+        #z0   = np.random.random((512,3))
+        z   = 255 * np.random.random((8,64,3))
+        for k in range(8):
+            z[k,:,:] = z0[(k*64)+np.arange(64),:]
+        #print z.shape
+        im  = plt.imshow(z/255, interpolation='spline16')
         plt.xticks([])
         plt.yticks([])
-        print('---***---')
+        #plt.colorbar()
+
         fig.tight_layout()
 
-        def updatefig(packet):
-            z = process_data(db, packet)
-            im.set_array(z)
+        def updatefig(z0):
+            #z = process_data(db, packet)
+            packet = recv_data()
+            z0 = process_data(packet)
+            #print z0
+            #print z0.shape
+            #z = z.reshape(8,64,3)
+            z   = np.zeros((8,64,3))
+            for k in range(8):
+                z[k,:,:] = z0[(k*64)+np.arange(64),:]  # 8 x 64 x 3
+
+            #z = z[:,:,0]
+            #z = np.random.random((8,64,3))
+            print z.min(), z.mean(), z.max()
+            im.set_array(z/255)
+            
 
         anim = animation.FuncAnimation(
-            fig, process_data, recv_data,
+            fig, updatefig,
             interval = 100,
-            blit     = False,
+            blit     = False, # seems to crash if True
             )
+        #plt.colorbar()
+        #plt.set_cmap('inferno')
         plt.show()
 
     else:

@@ -34,7 +34,7 @@ sim = True
 
 SOURCE = 'proximity'
 Nprox   = 4
-d_mean  = 150   # average distance for sim data
+d_mean  = 100   # average distance for sim data
 # this is the thing that get the data
 def element(fsample):
 
@@ -47,22 +47,21 @@ def element(fsample):
         
     while True:
         # do SIM if sample frequency negative
-        if sim == True:
-            print fs, fsample
+        if sim:
             t = [1]
             ds    = ProximityData(t, d_mean, 15, Nprox)   #  [cm]
-            data  = ds/100
-            print data
+            data  = np.asarray(ds[0])/100
+            #print data
             logging.debug(data)
         else:
-            vv = 39
-            #x1 = DAQC.getRANGE(0, 0, 'c')  # get distance [cm]
-            #x2 = DAQC.getRANGE(0, 1, 'c')  # get distance [cm]
-            #x3 = DAQC.getRANGE(0, 2, 'c')  # get distance [cm]
-            #x4 = DAQC.getRANGE(0, 3, 'c')  # get distance [cm]
-            #if x1 < 0.1:
-            #    x1 = rangeLimit
-            #data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
+            #vv = 39
+            x1 = DAQC.getRANGE(0, 0, 'c')  # get distance [cm]
+            x2 = DAQC.getRANGE(0, 1, 'c')  # get distance [cm]
+            x3 = DAQC.getRANGE(0, 2, 'c')  # get distance [cm]
+            x4 = DAQC.getRANGE(0, 3, 'c')  # get distance [cm]
+            if x1 < 0.1:
+                x1 = rangeLimit
+            data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
 
 
         logging.debug((SOURCE, len(data), data))
