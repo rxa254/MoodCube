@@ -6,8 +6,8 @@ import zmq
 import pickle
 import signal
 import numpy as np
-import matplotlib
-matplotlib.use('qt4agg')
+import matplotlib as mpl
+mpl.use('qt4agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import logging
@@ -36,35 +36,30 @@ def plotJelly(sources, samples=1):
         print('---***---')
         z0  = process_data(recv_data())
         print z0
-        fig = plt.figure(33)
+        mpl.rcParams['toolbar'] = 'None'
+        fig = plt.figure(figsize=(12,1.5))
         #print z0.shape
         #z0   = np.random.random((512,3))
         z   = 255 * np.random.random((8,64,3))
         for k in range(8):
             z[k,:,:] = z0[(k*64)+np.arange(64),:]
         #print z.shape
-        im  = plt.imshow(z/255, interpolation='spline16')
+        im  = plt.imshow(z/255, interpolation='nearest')
         plt.xticks([])
         plt.yticks([])
         #plt.colorbar()
 
-        fig.tight_layout()
-
+        fig.tight_layout(pad=0, h_pad=0)
+        
         def updatefig(z0):
             #z = process_data(db, packet)
             packet = recv_data()
             z0 = process_data(packet)
-            #print z0
-            #print z0.shape
-            #z = z.reshape(8,64,3)
             z   = np.zeros((8,64,3))
             for k in range(8):
                 z[k,:,:] = z0[(k*64)+np.arange(64),:]  # 8 x 64 x 3
 
-            #z = z[:,:,0]
-            #z = np.random.random((8,64,3))
-            print z.min(), z.mean(), z.max()
-            im.set_array(z/255)
+            im.set_array(z/100)
             
 
         anim = animation.FuncAnimation(
