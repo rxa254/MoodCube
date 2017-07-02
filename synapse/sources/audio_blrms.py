@@ -73,7 +73,8 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
 
     k = -1
     whiteFilt = np.zeros(nbands)
-
+    wf_alpha = 0.01  # leaky exponential averaging
+    
     while True:
 
         try:
@@ -100,10 +101,9 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
 
         # whiten
         k += 1
-        whiteFilt += blms
-        whiteFilt  = whiteFilt / (k+1)
-        blms       = blms / whiteFilt
-        blms       = np.log10(blms)
+        whiteFilt = wf_alpha * blms + (1-wf_alpha)*whiteFilt
+        blms      = blms / whiteFilt
+        blms      = np.log10(blms)
 
         logging.debug((SOURCE, len(blms), blms))
 
