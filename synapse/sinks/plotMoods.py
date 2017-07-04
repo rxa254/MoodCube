@@ -38,28 +38,24 @@ def plotJelly(sources, samples=1):
         print z0
         mpl.rcParams['toolbar'] = 'None'
         fig = plt.figure(figsize=(12,1.5))
-        #print z0.shape
-        #z0   = np.random.random((512,3))
         z   = 255 * np.random.random((8,64,3))
         for k in range(8):
             z[k,:,:] = z0[(k*64)+np.arange(64),:]
-        #print z.shape
         im  = plt.imshow(z/255, interpolation='nearest')
         plt.xticks([])
         plt.yticks([])
-        #plt.colorbar()
-
         fig.tight_layout(pad=0, h_pad=0)
         
         def updatefig(z0):
-            #z = process_data(db, packet)
             packet = recv_data()
             z0 = process_data(packet)
+
+            # convert from 512x3 to 8x64x3
             z   = np.zeros((8,64,3))
             for k in range(8):
                 z[k,:,:] = z0[(k*64)+np.arange(64),:]  # 8 x 64 x 3
 
-            im.set_array(z/100)
+            im.set_array(z/255)
             
 
         anim = animation.FuncAnimation(
@@ -67,8 +63,6 @@ def plotJelly(sources, samples=1):
             interval = 100,
             blit     = False, # seems to crash if True
             )
-        #plt.colorbar()
-        #plt.set_cmap('inferno')
         plt.show()
 
     else:
