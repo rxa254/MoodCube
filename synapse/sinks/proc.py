@@ -10,8 +10,8 @@ numLEDperStrip = 64  # no. of LEDs per strip
 numLEDs        = numStrips * numLEDperStrip
 #np.random.seed(137)
 
-learning_rate = 1e-6 # add comments here about what are good vals
-decay_rate    = 0.99 
+learning_rate = 0.3e-6 # add comments here about what are good vals
+decay_rate    = 0.9999 
 
 
 # how much history of prox sensors to hold
@@ -173,7 +173,7 @@ class ProcessData(object):
         
         
         nL = len(data)
-        numNeurons = [nL, 6, 4*nL, 3*numLEDs]
+        numNeurons = [nL, 8*nL, 16*nL,16*nL,16*nL, 3*numLEDs]
 
         self.num_layers = len(numNeurons)
         
@@ -205,15 +205,21 @@ class ProcessData(object):
                                self.g_dict,
                                decay_rate, learning_rate)
         
-        bias_noise = np.random.randn(numLEDs, 3)
+        bias_noise = np.random.randn(numLEDs * 3)
         # scale to output range of 100 (lowered from 255 for power)
         output = 100 * (output + 1) / 2
-
+        output += 20*bias_noise
+        
         output = np.round(output)
         output = np.clip(output, 0, 100)
 
-        print("out = " + np.array_str(output[7:15], precision = 0))
-        output = output.reshape(numLEDs, 3) + (0) * bias_noise
+        try:
+            logging.info("out = " + np.array_str(output[7:15],
+                                                 precision = 0))
+        except:
+            logging.info("Weird value in output to LEDs...")
+        
+        output = output.reshape(numLEDs, 3)
 
 
         # increase brightness of jelly dome head to compensate for bright room
