@@ -55,9 +55,9 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
 
     p      = pyaudio.PyAudio()
     stream = p.open(
-        input=True,
-        format=pyaudio.paInt16,
-        channels=const.AUDIO_CHANNEL,
+        input    = True,
+        format   = pyaudio.paInt16,
+        channels = const.AUDIO_CHANNEL,
         rate=const.AUDIO_RATE,
         frames_per_buffer=CHUNK)
 
@@ -72,17 +72,17 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
     blms = np.ones(len(f1) - 1)
 
     k = -1
-    whiteFilt = np.zeros(nbands)
-
+    whiteFilt = 0.0001*np.ones(nbands)
+    wf_alpha = 0.01  # leaky exponential averaging
+    
     while True:
-        k += 1
 
         try:
             samples = stream.read(CHUNK)
         except IOError:
             logging.warning((SOURCE, e))
             continue
-        data     = np.frombuffer(samples, dtype=np.int16)
+        data = np.frombuffer(samples, dtype = np.int16)
         data = data.astype('float_')
         
         ff, psd  = welch(data, fs, nperseg = CHUNK,
@@ -98,19 +98,19 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
         for j in range(len(f1) - 1):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
             blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
-    
-        blms = np.log10(blms) + 1
 
         # whiten
-        whiteFilt += blms
-        blms -= (whiteFilt / (k+1))
+        k += 1
+        whiteFilt = wf_alpha * blms + (1-wf_alpha)*whiteFilt
+        blms      = blms / whiteFilt
+        blms      = np.log10(blms)
 
         logging.debug((SOURCE, len(blms), blms))
 
         msg = pickle.dumps({
             SOURCE: {
                 'data': blms,
-                'sample_rate': 1./chunk_size,
+                'sample_rate': 1/chunk_size,
                 }
             })
 

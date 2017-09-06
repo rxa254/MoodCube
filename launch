@@ -6,6 +6,6 @@ export LOG_LEVEL=INFO
 
 exec python -m synapse \
      -j \
-     audio_blrms:0.2 \
+     audio_blrms:0.3 \
      proximity:1 \
      date:1
