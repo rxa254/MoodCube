@@ -18,7 +18,8 @@ def plot():
 
     socket = context.socket(zmq.SUB)
     socket.connect(const.MUX_SOURCE)
-    socket.subscribe(u'')
+    #socket.subscribe(u'')
+    socket.setsockopt(zmq.SUBSCRIBE, '')
 
     def recv_data():
         source, msg = socket.recv_multipart()
@@ -26,7 +27,7 @@ def plot():
         yield dd
 
     fig, ax = plt.subplots()
-    bars   = {}
+    bars    = {}
     packet  = recv_data()
     for source, data in next(packet).items():
         x             = np.arange(len(data))

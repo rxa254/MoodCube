@@ -7,7 +7,7 @@ import pickle
 import signal
 import numpy as np
 import matplotlib
-matplotlib.use('qt4agg')  # why we have to use this one?
+matplotlib.use('qt4agg')  
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import logging
@@ -19,7 +19,7 @@ from .. import opc
 numStrips        = 8
 numLEDperStrip   = 64  # no. of LEDs per strip
 numLEDs = numStrips * numLEDperStrip
-sim = False
+sim = True
 #np.random.seed(137)
 
 # how much histry of prox sensors to hold
@@ -42,9 +42,12 @@ def process_data(packet):
     
     data      = np.asarray(z['data'])
     #data     = data / 0.001   # scale to unity
-    logging.debug(k)
+    #logging.debug(k)
     prox[1:] = prox[0:-1]
     prox[0]  = data
+    # Exponential Linear Units https://arxiv.org/abs/1511.07289
+    #alpha = 1  
+    #a = alpha * (np.exp(a) - 1)
 
     a  = np.dot(prox.T, inpLayer.T)
     a  = np.tanh(a)/2 + 1
@@ -72,7 +75,7 @@ def plotJelly(sources, seconds=1):
         source, msg = socket.recv_multipart()
         return pickle.loads(msg)
 
-    if sim == True:
+    if sim:
         z = process_data(recv_data())
         fig = plt.figure(30)
         im  = plt.imshow(z, interpolation='spline16')
