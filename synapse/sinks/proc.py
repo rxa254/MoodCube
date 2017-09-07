@@ -34,8 +34,9 @@ time_target  = np.array([0, 0, 0, 0])   # dummy
 def act_fun(x):  
     #y = 1/(1 + np.exp(-x))  # sigmoid function
     #y = np.tanh(x)  # tanh function
+    
     y = x
-    m = np.any([x <= 0])
+    m = np.where(x <= 0)
     lam = 1
     y[m] = (np.exp(x[m]) - 1)
     y *= lam
@@ -45,7 +46,7 @@ def dact_fun(x):
     #y = x * (1-x) # derivative of sigmoid
     #y = 1 - (np.tanh(x))**2  # derivative of tanh
     y = np.ones_like(x)
-    m = np.any([x <= 0])
+    m = np.where(x <= 0)
     lam = 1
     y[m] = np.exp(x[m])
     y *= lam
