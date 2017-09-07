@@ -163,23 +163,23 @@ class ProcessData(object):
         self.data[0,:]    = x
 
         data = self.data.flatten()
-        logging.info(data.shape)
+        logging.debug(data.shape)
         #logging.info(data)
 
 
-        logging.debug("audio_blrms = " +
-                      np.array_str(data[0:8], precision=3))
-        logging.debug("proximity   = " +
-                      np.array_str(data[8:12], precision=3))
+        logging.info("audio_blrms = " +
+                      np.array_str(data[0:8],   precision = 2))
+        logging.info("proximity   = " +
+                      np.array_str(data[8:12],  precision = 2))
         logging.debug("datetime    = " +
-                      np.array_str(data[12:16], precision=3))
+                      np.array_str(data[12:16], precision = 2))
 
         audio_mask = [1, 2, 3, 4, 5, 6]
 
         audio_err   = 1 * np.sum(data[audio_mask] - audio_target[audio_mask])
         #l1_error      = 0.1 * np.sum(data[0:8]  - audio_target)
         
-        p_mask = [0, 2, 3]
+        p_mask = [0, 1, 2, 3]
         prox_dat = data[8:12]
         prox_err = np.amin(np.abs(prox_dat[p_mask]
                                        - prox_target[p_mask]))
