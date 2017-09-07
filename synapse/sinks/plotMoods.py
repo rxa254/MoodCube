@@ -7,7 +7,7 @@ import pickle
 import signal
 import numpy as np
 import matplotlib as mpl
-mpl.use('qt4agg')
+#mpl.use('qt4agg')
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import logging
@@ -16,7 +16,7 @@ from .. import const
 from .. import opc
 from . import proc
 
-sim = True
+sim = False
 
 def plotJelly(sources, samples=1):
     seconds = int(samples)

@@ -5,7 +5,7 @@ export PYTHONPATH=/home/pi/GIT/MoodCube
 export LOG_LEVEL=INFO
 
 exec python -m synapse \
-     -j \
-     audio_blrms:1 \
+     --jellyfish \
+     audio_blrms:0.3 \
      proximity:1 \
      date:1

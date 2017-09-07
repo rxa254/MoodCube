@@ -89,7 +89,7 @@ def main():
         procs['plot'] = proc
 
     if args.barplot:
-        logging.info("initializing plotter...")
+        logging.info("initializing bar plotter...")
         proc = multiprocessing.Process(
             name   = 'barplot',
             target = sinks.barplot.plot,
