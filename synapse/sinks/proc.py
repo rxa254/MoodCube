@@ -10,18 +10,21 @@ numLEDperStrip = 64  # no. of LEDs per strip
 numLEDs        = numStrips * numLEDperStrip
 #np.random.seed(137)
 
-learning_rate = 0.3e-6 # add comments here about what are good vals
-decay_rate    = 0.9999 
+learning_rate = 1e-8 # add comments here about what are good vals
+decay_rate    = 1 - 1e-8
 
 
 # how much history of prox sensors to hold
-t_prox_hist  = 10
+t_prox_hist  = 20
 fsample      = 1
 N            = int(t_prox_hist * fsample)
-Nsensors     = 8 + 4 + 4
-prox         = np.zeros((N, Nsensors))
+Naudio       = 8 # number of audio bands
+Nprox        = 4 # number of proximity sensors
+Ntime        = 4 # day, hour, min, sec
+Nsensors     = Naudio + Nprox + Ntime
+prox         = np.zeros((N * Nsensors, ))
 
-audio_target = np.array([0, 0, 1, 1, 1, 1, 1, 0])  # roughly human 
+audio_target = np.array([0, 0, 1, 1.5, 1.5, 1, 1, 0])  # roughly human 
 
 prox_target  = np.array([1, 1, 1, 1])   # 1 meter
 time_target  = np.array([0, 0, 0, 0])   # dummy
@@ -30,20 +33,22 @@ time_target  = np.array([0, 0, 0, 0])   # dummy
 
 def act_fun(x):  
     #y = 1/(1 + np.exp(-x))  # sigmoid function
-    y = np.tanh(x)  # tanh function
-    #y = x
-    #m = np.any([x <= 0])
-    #alpha = 1
-    #y[m] = alpha * (np.exp(x) - 1)
+    #y = np.tanh(x)  # tanh function
+    y = x
+    m = np.any([x <= 0])
+    lam = 1
+    y[m] = (np.exp(x[m]) - 1)
+    y *= lam
     return y 
 
 def dact_fun(x): 
     #y = x * (1-x) # derivative of sigmoid
-    y = 1 - (np.tanh(x))**2  # derivative of tanh
-    #y = 1
-    #m = np.any([x <= 0])
-    #alpha = 1
-    #y[m] = alpha * np.exp(x)
+    #y = 1 - (np.tanh(x))**2  # derivative of tanh
+    y = np.ones_like(x)
+    m = np.any([x <= 0])
+    lam = 1
+    y[m] = np.exp(x[m])
+    y *= lam
     return y
 
 # forward propagate the input data through the matrices and thresholds
@@ -77,9 +82,11 @@ def compute_gradient(self, error_signal, input_data):
         delta = np.dot(self.weights[layers[-k+1]], delta) * dz
 
         if k == (self.num_layers - 1):
-            dw = { layers[-k]: np.outer(input_data, delta)}
+            dw = { layers[-k]:
+                   np.outer(input_data, delta)}
         else:
-            dw = { layers[-k]: np.outer(self.neuron_outputs[layers[-k-1]], delta)}
+            dw = { layers[-k]:
+                   np.outer(self.neuron_outputs[layers[-k-1]], delta)}
 
 
         gradients.update(dw)
@@ -94,7 +101,7 @@ def update_weights(weights, expectation_g_squared, g_dict,
     
     for layer_name in sorted(weights.keys()):
         g = g_dict[layer_name]
-        #print layer_name
+
         expectation_g_squared[layer_name] = decay_rate * \
                            expectation_g_squared[layer_name] + \
                            (1 - decay_rate) * g**2
@@ -144,12 +151,19 @@ class ProcessData(object):
         # (http://sebastianruder.com/optimizing-gradient-descent/index.html#rmsprop)
         self.expectation_g_squared = {}
         self.g_dict = {}
+        self.data = np.zeros((N, Nsensors))
             
     def __call__(self, packet):
         self.db.append(packet)
-        data = self.db.get()
-        #logging.debug(len(data))
-        #print(data)
+        x = self.db.get()
+
+        # update data matrix with fresh samples
+        self.data[1:-1,:] = self.data[0:-2,:]
+        self.data[0,:]    = x
+
+        data = self.data.flatten()
+        logging.info(data.shape)
+        #logging.info(data)
 
 
         logging.debug("audio_blrms = " +
@@ -159,7 +173,7 @@ class ProcessData(object):
         logging.debug("datetime    = " +
                       np.array_str(data[12:16], precision=3))
 
-        audio_mask = [0, 1, 2, 3, 4, 5, 6]
+        audio_mask = [1, 2, 3, 4, 5, 6]
 
         audio_err   = 1 * np.sum(data[audio_mask] - audio_target[audio_mask])
         #l1_error      = 0.1 * np.sum(data[0:8]  - audio_target)
@@ -173,7 +187,7 @@ class ProcessData(object):
         
         
         nL = len(data)
-        numNeurons = [nL, 8*nL, 16*nL,16*nL,16*nL, 3*numLEDs]
+        numNeurons = [nL, 4*nL, nL, 3*numLEDs]
 
         self.num_layers = len(numNeurons)
         
@@ -207,11 +221,11 @@ class ProcessData(object):
         
         bias_noise = np.random.randn(numLEDs * 3)
         # scale to output range of 100 (lowered from 255 for power)
-        output = 100 * (output + 1) / 2
-        output += 20*bias_noise
+        output  = 100 * (output + 1) / 2
+        output += 0*bias_noise
         
-        output = np.round(output)
-        output = np.clip(output, 0, 100)
+        output  = np.round(output)
+        output  = np.clip(output, 0, 100)
 
         try:
             logging.info("out = " + np.array_str(output[7:15],
@@ -222,8 +236,9 @@ class ProcessData(object):
         output = output.reshape(numLEDs, 3)
 
 
-        # increase brightness of jelly dome head to compensate for bright room
-        # selects the first 8 LEDs in each strip
+        # increase brightness of jelly dome head to compensate
+        # for bright room
+        # -- selects the first 8 LEDs in each strip
         j0 = np.array(range(8))
         j  = j0
         for k in np.arange(1,8):
