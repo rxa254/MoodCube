@@ -10,12 +10,13 @@ numLEDperStrip = 64  # no. of LEDs per strip
 numLEDs        = numStrips * numLEDperStrip
 #np.random.seed(137)
 
-learning_rate = 1e-8 # add comments here about what are good vals
-decay_rate    = 1 - 1e-8
+learning_rate = 1e-9 # add comments here about what are good vals
+decay_rate    = 1 - 1e-9
 
 
 # how much history of prox sensors to hold
 t_prox_hist  = 20
+
 fsample      = 1
 N            = int(t_prox_hist * fsample)
 Naudio       = 8 # number of audio bands
@@ -223,7 +224,7 @@ class ProcessData(object):
         bias_noise = np.random.randn(numLEDs * 3)
         # scale to output range of 100 (lowered from 255 for power)
         output  = 100 * (output + 1) / 2
-        output += 0*bias_noise
+        output += 10*bias_noise
         
         output  = np.round(output)
         output  = np.clip(output, 0, 100)

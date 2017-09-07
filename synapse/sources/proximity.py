@@ -76,7 +76,7 @@ def element(fsample):
             data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
 
 
-        logging.info((SOURCE, len(data), data))
+        logging.debug((SOURCE, len(data), data))
         msg = pickle.dumps({
             SOURCE: {
                 'data'       : data,
