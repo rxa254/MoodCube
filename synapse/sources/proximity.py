@@ -6,7 +6,13 @@ import argparse
 
 import numpy as np
 from scipy.stats import rayleigh
-#import DAQCplate as DAQC
+
+
+sim = False
+if sim:
+    logging.info("Sim Proximity mode")
+else:
+    import DAQCplate as DAQC
 
 # Jamie Synapse dependencies
 import zmq
@@ -30,7 +36,7 @@ def ProximityData(t, d_0, dx, N):
 
     return d
 
-sim = True
+
 
 SOURCE = 'proximity'
 Nprox   = 4
@@ -51,20 +57,26 @@ def element(fsample):
             t = [1]
             ds    = ProximityData(t, d_mean, 15, Nprox)   #  [cm]
             data  = np.asarray(ds[0])/100
-            #print data
+
             logging.debug(data)
         else:
-            #vv = 39
+
             x1 = DAQC.getRANGE(0, 0, 'c')  # get distance [cm]
             x2 = DAQC.getRANGE(0, 1, 'c')  # get distance [cm]
             x3 = DAQC.getRANGE(0, 2, 'c')  # get distance [cm]
             x4 = DAQC.getRANGE(0, 3, 'c')  # get distance [cm]
             if x1 < 0.1:
                 x1 = rangeLimit
+            if x2 < 0.1:
+                x2 = rangeLimit
+            if x3 < 0.1:
+                x3 = rangeLimit
+            if x4 < 0.1:
+                x4 = rangeLimit
             data = np.asarray([x1, x2, x3, x4]) / 100   # cm to m
 
 
-        logging.debug((SOURCE, len(data), data))
+        logging.info((SOURCE, len(data), data))
         msg = pickle.dumps({
             SOURCE: {
                 'data'       : data,
