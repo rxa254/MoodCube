@@ -74,8 +74,8 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
     k = -1
 
     # init with non-zero vals so no divide by zero issues
-    whiteFilt = 0.0001*np.ones(nbands)
-    wf_alpha = 0.01  # leaky exponential averaging
+    whiteFilt = 0.0001 * np.ones(nbands)
+    wf_alpha  = 0.001  # leaky exponential averaging
     
     while True:
 
@@ -86,7 +86,8 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
             continue
         data = np.frombuffer(samples, dtype = np.int16)
         data = data.astype('float_')
-        
+
+        # use Welch's method to make PSD
         ff, psd  = welch(data, fs, nperseg = CHUNK,
                          detrend = 'linear',
                          scaling = 'spectrum',
@@ -99,7 +100,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
 
         for j in range(len(f1) - 1):
             inds    = (ff > f1[j]) & (ff < f1[j+1])
-            blms[j] = np.sum(psd[inds])      # this is really blrms**2, not blrms
+            blms[j] = np.sum(psd[inds])
 
         # whiten
         k += 1
