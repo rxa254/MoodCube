@@ -75,7 +75,7 @@ def element(chunk_size=DEFAULT_CHUNK_SIZE, nbands=DEFAULT_NBANDS):
 
     # init with non-zero vals so no divide by zero issues
     whiteFilt = 0.0001 * np.ones(nbands)
-    wf_alpha  = 0.001  # leaky exponential averaging
+    wf_alpha  = 0.01  # leaky exponential averaging
     
     while True:
 
