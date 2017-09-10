@@ -75,3 +75,4 @@ show service status:
 * follow logs:
 
   $ journalctl -f
+  $ journalctl -f -o cat   (more terse)
