@@ -5,11 +5,11 @@ import matplotlib.animation as animation
 
 
 # Update the matplotlib configuration parameters:
-plt.rcParams.update({'font.size': 20,
-                     'font.family': 'serif',
+plt.rcParams.update({'font.size':      20,
+                     'font.family':    'serif',
                      'figure.figsize': (10, 8),
-                     'axes.grid': True,
-                     'grid.color': '#555555'})
+                     'axes.grid':      True,
+                     'grid.color':     '#555555'})
 
 
 # this is the dimensions of the jellyfish
@@ -20,15 +20,15 @@ cmap = 'nipy_spectral'
 cmap = 'bone'
 
 zz = np.random.randint(low   = 0,
-                          high  = 2**Nbits - 1,
-                          size  = (d, d),
-                          dtype = 'uint')
+                       high  = 2**Nbits - 1,
+                       size  = (d, d),
+                       dtype = 'uint')
 
 
 fig = plt.figure()
-im  = plt.imshow(zz, animated=True,
-                     interpolation='bicubic',
-                           cmap = cmap)
+im  = plt.imshow(zz, animated = True,
+                interpolation = 'bicubic',
+                         cmap = cmap)
 plt.xticks([])
 plt.yticks([])
 fig.tight_layout()
