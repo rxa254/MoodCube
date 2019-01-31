@@ -3,6 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import ndimage
 
 
 
@@ -21,9 +22,13 @@ zz = np.random.randint(low   = 0,
                           size  = (d, d),
                           dtype = 'uint')
 
+input_ = np.fft.fft2(zz)
+result = ndimage.fourier_gaussian(input_, sigma=6)
+zz = np.fft.ifft2(result)
+zz = np.abs(zz)
 
-fig = plt.figure(figsize=(8,8))
-im  = plt.imshow(zz, cmap='gist_rainbow',
+fig = plt.figure(figsize=(4,4))
+im  = plt.imshow(zz.astype(int), cmap='inferno',
                      interpolation='hermite')
 plt.xticks([])
 plt.yticks([])
