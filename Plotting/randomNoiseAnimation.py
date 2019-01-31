@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-
+from scipy import ndimage
 
 # Update the matplotlib configuration parameters:
 plt.rcParams.update({'font.size':      20,
@@ -17,7 +17,7 @@ plt.rcParams.update({'font.size':      20,
 d = 2**7
 Nbits = 24
 cmap = 'nipy_spectral'
-cmap = 'bone'
+#cmap = 'inferno'
 
 zz = np.random.randint(low   = 0,
                        high  = 2**Nbits - 1,
@@ -25,9 +25,11 @@ zz = np.random.randint(low   = 0,
                        dtype = 'uint')
 
 
+
+
 fig = plt.figure()
 im  = plt.imshow(zz, animated = True,
-                interpolation = 'bicubic',
+                interpolation = 'hermite',
                          cmap = cmap)
 plt.xticks([])
 plt.yticks([])
@@ -37,6 +39,11 @@ def updatefig(*args):
                           high  = 2**Nbits - 1,
                           size  = zz.shape,
                           dtype = 'uint')
+    
+    input_ = np.fft.fft2(z)
+    result = ndimage.fourier_gaussian(input_, sigma=1)
+    z = np.fft.ifft2(result)
+    z = np.abs(z)
     
     im.set_array(z)
     
